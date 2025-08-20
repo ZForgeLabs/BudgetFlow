@@ -10,14 +10,15 @@ export async function middleware(req: NextRequest) {
 	} = await supabase.auth.getSession();
 
 	const isLogin = req.nextUrl.pathname.startsWith("/login");
+	const isRoot = req.nextUrl.pathname === "/";
 	if (!session && !isLogin) {
 		const url = req.nextUrl.clone();
 		url.pathname = "/login";
 		return NextResponse.redirect(url);
 	}
-	if (session && isLogin) {
+	if (session && (isLogin || isRoot)) {
 		const url = req.nextUrl.clone();
-		url.pathname = "/";
+		url.pathname = "/dashboard";
 		return NextResponse.redirect(url);
 	}
 	return res;

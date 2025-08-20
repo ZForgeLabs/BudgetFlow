@@ -13,10 +13,10 @@ export default function LoginPage() {
   useEffect(() => {
     let mounted = true;
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (mounted && session) router.replace("/");
+      if (mounted && session) router.replace("/dashboard");
     });
     const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session) router.replace("/");
+      if (session) router.replace("/dashboard");
     });
     return () => {
       mounted = false;
