@@ -45,14 +45,7 @@ export default function LoginPage() {
             and subscriptions—then visualize it instantly. Sign in to access your personal dashboard.
           </p>
 
-          <div className="mt-8 flex items-center gap-3">
-            <Button asChild size="lg">
-              <a href="#signin">Sign in to your account</a>
-            </Button>
-            <Button variant="outline" asChild size="lg">
-              <a href="https://github.com/ZForgeLabs/BudgetFlow" target="_blank" rel="noreferrer">View on GitHub</a>
-            </Button>
-          </div>
+          {/* CTA buttons removed as requested */}
 
           <div className="mt-10 grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm text-gray-600">
             <div className="rounded-lg border bg-white/60 p-4">
