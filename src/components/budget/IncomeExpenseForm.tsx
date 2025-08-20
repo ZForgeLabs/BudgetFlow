@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -36,6 +36,15 @@ const IncomeExpenseForm = ({
   const [expenses, setExpenses] = useState<Expense[]>(fixedExpenses);
   const [newExpenseName, setNewExpenseName] = useState("");
   const [newExpenseAmount, setNewExpenseAmount] = useState("");
+
+  // Update internal state when props change
+  useEffect(() => {
+    setExpenses(fixedExpenses);
+  }, [fixedExpenses]);
+
+  useEffect(() => {
+    setIncome(monthlyIncome.toString());
+  }, [monthlyIncome]);
 
   const handleIncomeChange = (value: string) => {
     setIncome(value);
