@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
 
-const allowed = new Set(["monthly", "bi-monthly", "annually"]);
+const allowed = new Set(["weekly", "semi-weekly", "monthly", "custom"]);
 
 export async function GET() {
   try {
@@ -11,8 +11,8 @@ export async function GET() {
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const { data, error } = await supabase
-      .from("subscriptions")
-      .select("id, name, amount, occurrence, start_date, created_at")
+      .from("schedules")
+      .select("id, bin_id, name, frequency, custom_month, custom_day, monthly_allocation, created_at")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false });
 
@@ -26,12 +26,15 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { name, amount, occurrence, startDate } = body ?? {};
-    if (!name || amount === undefined || !occurrence || !startDate) {
+    const { binId, name, frequency, customMonth, customDay, monthlyAllocation } = body ?? {};
+    if (!binId || !frequency) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
-    if (!allowed.has(occurrence)) {
-      return NextResponse.json({ error: "Invalid occurrence" }, { status: 400 });
+    if (frequency === "custom" && (!customMonth || !customDay)) {
+      return NextResponse.json({ error: "Custom schedule requires month and day" }, { status: 400 });
+    }
+    if (!allowed.has(frequency)) {
+      return NextResponse.json({ error: "Invalid frequency" }, { status: 400 });
     }
 
     const supabase = createRouteHandlerClient({ cookies });
@@ -39,13 +42,15 @@ export async function POST(req: NextRequest) {
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const { data, error } = await supabase
-      .from("subscriptions")
+      .from("schedules")
       .insert({
         user_id: user.id,
+        bin_id: binId,
         name,
-        amount,
-        occurrence,
-        start_date: startDate,
+        frequency,
+        custom_month: customMonth,
+        custom_day: customDay,
+        monthly_allocation: monthlyAllocation,
       })
       .select("id")
       .single();
@@ -68,7 +73,7 @@ export async function DELETE(req: NextRequest) {
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const { error } = await supabase
-      .from("subscriptions")
+      .from("schedules")
       .delete()
       .eq("id", id)
       .eq("user_id", user.id);
