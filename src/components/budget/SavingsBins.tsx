@@ -162,7 +162,7 @@ const SavingsBins = ({
   );
   const remainingAmount = availableAmount - totalAllocated;
 
-  const addBin = () => {
+  const addBin = async () => {
     if (newBinName.trim() && newBinGoal) {
       const newBin: SavingsBin = {
         id: Date.now().toString(),
@@ -178,23 +178,43 @@ const SavingsBins = ({
       const updatedBins = [...bins, newBin];
       setBins(updatedBins);
       onBinsChange(updatedBins);
+      try {
+        const res = await fetch("/api/bins", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name: newBin.name, goalAmount: newBin.goalAmount }),
+        });
+        const data = await res.json();
+        if (res.ok && data?.id) {
+          setBins((prev) => prev.map((b) => (b === newBin ? { ...b, id: data.id } : b)));
+          onBinsChange(updatedBins);
+        }
+      } catch (e) {}
       setNewBinName("");
       setNewBinGoal("");
     }
   };
 
-  const removeBin = (id: string) => {
+  const removeBin = async (id: string) => {
     const updatedBins = bins.filter((bin) => bin.id !== id);
     setBins(updatedBins);
     onBinsChange(updatedBins);
+    try { await fetch(`/api/bins?id=${id}`, { method: "DELETE" }); } catch (e) {}
   };
 
-  const updateBinAllocation = (id: string, allocation: number) => {
+  const updateBinAllocation = async (id: string, allocation: number) => {
     const updatedBins = bins.map((bin) =>
       bin.id === id ? { ...bin, monthlyAllocation: allocation } : bin,
     );
     setBins(updatedBins);
     onBinsChange(updatedBins);
+    try {
+      await fetch("/api/bins", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, monthlyAllocation: allocation }),
+      });
+    } catch (e) {}
   };
 
   const addToSavedAmount = (id: string) => {
@@ -211,6 +231,16 @@ const SavingsBins = ({
     onBinsChange(updatedBins);
     setSavedInputs((prev) => ({ ...prev, [id]: "" }));
     toast({ title: "Transfer successful", description: "Saved amount updated" });
+    try {
+      const changed = updatedBins.find((b) => b.id === id);
+      if (changed) {
+        await fetch("/api/bins", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id, currentAmount: changed.currentAmount }),
+        });
+      }
+    } catch (e) {}
   };
 
   const updateBinScheduleLocal = (

@@ -51,13 +51,22 @@ const IncomeExpenseForm = ({
     setIsEditingIncome(false);
   };
 
-  const saveIncome = () => {
+  const saveIncome = async () => {
     const numValue = parseFloat(income) || 0;
     onIncomeChange(numValue);
+    try {
+      await fetch("/api/profile", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ monthlyIncome: numValue }),
+      });
+    } catch (e) {
+      // noop
+    }
     setIsEditingIncome(false);
   };
 
-  const addExpense = () => {
+  const addExpense = async () => {
     if (newExpenseName.trim() && newExpenseAmount) {
       const newExpense: Expense = {
         id: Date.now().toString(),
@@ -67,18 +76,38 @@ const IncomeExpenseForm = ({
       const updatedExpenses = [...expenses, newExpense];
       setExpenses(updatedExpenses);
       onExpensesChange(updatedExpenses);
+      // Persist
+      try {
+        const res = await fetch("/api/expenses", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name: newExpense.name, amount: newExpense.amount }),
+        });
+        const data = await res.json();
+        if (res.ok && data?.id) {
+          // replace temp id with server id
+          setExpenses((prev) => prev.map((e) => (e === newExpense ? { ...e, id: data.id } : e)));
+        }
+      } catch (e) {
+        // noop
+      }
       setNewExpenseName("");
       setNewExpenseAmount("");
     }
   };
 
-  const removeExpense = (id: string) => {
+  const removeExpense = async (id: string) => {
     const updatedExpenses = expenses.filter((expense) => expense.id !== id);
     setExpenses(updatedExpenses);
     onExpensesChange(updatedExpenses);
+    try {
+      await fetch(`/api/expenses?id=${id}`, { method: "DELETE" });
+    } catch (e) {
+      // noop
+    }
   };
 
-  const updateExpense = (
+  const updateExpense = async (
     id: string,
     field: "name" | "amount",
     value: string,
@@ -94,6 +123,18 @@ const IncomeExpenseForm = ({
     });
     setExpenses(updatedExpenses);
     onExpensesChange(updatedExpenses);
+    try {
+      const payload: any = { id };
+      if (field === "name") payload.name = value;
+      if (field === "amount") payload.amount = parseFloat(value) || 0;
+      await fetch("/api/expenses", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+    } catch (e) {
+      // noop
+    }
   };
 
   return (

@@ -27,35 +27,8 @@ interface SavingsBin {
 
 export default function DashboardPage() {
   const [monthlyIncome, setMonthlyIncome] = useState(5000);
-  const [fixedExpenses, setFixedExpenses] = useState<Expense[]>([
-    { id: "1", name: "Rent", amount: 1200 },
-    { id: "2", name: "Groceries", amount: 400 },
-    { id: "3", name: "Utilities", amount: 150 },
-    { id: "4", name: "Internet", amount: 80 },
-  ]);
-  const [savingsBins, setSavingsBins] = useState<SavingsBin[]>([
-    {
-      id: "1",
-      name: "Emergency Fund",
-      currentAmount: 2500,
-      goalAmount: 10000,
-      monthlyAllocation: 500,
-    },
-    {
-      id: "2",
-      name: "Vacation",
-      currentAmount: 800,
-      goalAmount: 3000,
-      monthlyAllocation: 300,
-    },
-    {
-      id: "3",
-      name: "Retirement",
-      currentAmount: 15000,
-      goalAmount: 50000,
-      monthlyAllocation: 800,
-    },
-  ]);
+  const [fixedExpenses, setFixedExpenses] = useState<Expense[]>([]);
+  const [savingsBins, setSavingsBins] = useState<SavingsBin[]>([]);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const router = useRouter();
   const [signingOut, setSigningOut] = useState(false);
@@ -75,14 +48,41 @@ export default function DashboardPage() {
   }, []);
 
   useEffect(() => {
-    const loadSubs = async () => {
-      const res = await fetch("/api/subscriptions", { cache: "no-store" });
-      if (res.ok) {
-        const { items } = await res.json();
+    const loadAll = async () => {
+      // profile income
+      const resProfile = await fetch("/api/profile", { cache: "no-store" });
+      if (resProfile.ok) {
+        const { monthlyIncome: mi } = await resProfile.json();
+        if (typeof mi === "number" && !Number.isNaN(mi)) setMonthlyIncome(mi);
+      }
+      // expenses
+      const resExp = await fetch("/api/expenses", { cache: "no-store" });
+      if (resExp.ok) {
+        const { items } = await resExp.json();
+        setFixedExpenses(items.map((e: any) => ({ id: String(e.id), name: e.name, amount: Number(e.amount) || 0 })));
+      }
+      // bins
+      const resBins = await fetch("/api/bins", { cache: "no-store" });
+      if (resBins.ok) {
+        const { items } = await resBins.json();
+        setSavingsBins(
+          items.map((b: any) => ({
+            id: String(b.id),
+            name: b.name,
+            currentAmount: Number(b.current_amount) || 0,
+            goalAmount: Number(b.goal_amount) || 0,
+            monthlyAllocation: Number(b.monthly_allocation) || 0,
+          })),
+        );
+      }
+      // subscriptions
+      const resSubs = await fetch("/api/subscriptions", { cache: "no-store" });
+      if (resSubs.ok) {
+        const { items } = await resSubs.json();
         setSubs(items);
       }
     };
-    if (isLoggedIn) loadSubs();
+    if (isLoggedIn) loadAll();
   }, [isLoggedIn]);
 
   const totalExpenses = fixedExpenses.reduce((sum, e) => sum + e.amount, 0);
