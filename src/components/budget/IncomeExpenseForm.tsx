@@ -32,14 +32,29 @@ const IncomeExpenseForm = ({
   onExpensesChange = () => {},
 }: IncomeExpenseFormProps) => {
   const [income, setIncome] = useState(monthlyIncome.toString());
+  const [isEditingIncome, setIsEditingIncome] = useState(false);
   const [expenses, setExpenses] = useState<Expense[]>(fixedExpenses);
   const [newExpenseName, setNewExpenseName] = useState("");
   const [newExpenseAmount, setNewExpenseAmount] = useState("");
 
   const handleIncomeChange = (value: string) => {
     setIncome(value);
-    const numValue = parseFloat(value) || 0;
+  };
+
+  const startEditingIncome = () => {
+    setIncome(monthlyIncome.toString());
+    setIsEditingIncome(true);
+  };
+
+  const cancelEditingIncome = () => {
+    setIncome(monthlyIncome.toString());
+    setIsEditingIncome(false);
+  };
+
+  const saveIncome = () => {
+    const numValue = parseFloat(income) || 0;
     onIncomeChange(numValue);
+    setIsEditingIncome(false);
   };
 
   const addExpense = () => {
@@ -93,14 +108,31 @@ const IncomeExpenseForm = ({
         <CardContent>
           <div className="space-y-2">
             <Label htmlFor="income">Total Monthly Income</Label>
-            <Input
-              id="income"
-              type="number"
-              placeholder="5000"
-              value={income}
-              onChange={(e) => handleIncomeChange(e.target.value)}
-              className="text-lg font-medium"
-            />
+            {!isEditingIncome ? (
+              <div className="flex items-center justify-between">
+                <div className="text-2xl font-bold">${monthlyIncome.toLocaleString()}</div>
+                <Button type="button" variant="outline" onClick={startEditingIncome}>
+                  Change Monthly Income
+                </Button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <Input
+                  id="income"
+                  type="number"
+                  placeholder="5000"
+                  value={income}
+                  onChange={(e) => handleIncomeChange(e.target.value)}
+                  className="text-lg font-medium"
+                />
+                <Button type="button" onClick={saveIncome} className="bg-blue-600 hover:bg-blue-700 text-white">
+                  Save
+                </Button>
+                <Button type="button" variant="outline" onClick={cancelEditingIncome}>
+                  Cancel
+                </Button>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -125,15 +157,18 @@ const IncomeExpenseForm = ({
                   }
                   className="flex-1"
                 />
-                <Input
-                  type="number"
-                  placeholder="Amount"
-                  value={expense.amount.toString()}
-                  onChange={(e) =>
-                    updateExpense(expense.id, "amount", e.target.value)
-                  }
-                  className="w-24"
-                />
+                <div className="relative w-24">
+                  <span className="pointer-events-none absolute left-2 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+                  <Input
+                    type="number"
+                    placeholder="0"
+                    value={expense.amount.toString()}
+                    onChange={(e) =>
+                      updateExpense(expense.id, "amount", e.target.value)
+                    }
+                    className="w-24 pl-5"
+                  />
+                </div>
                 <Button
                   variant="outline"
                   size="icon"
@@ -148,28 +183,31 @@ const IncomeExpenseForm = ({
 
           {/* Add New Expense */}
           <div className="border-t pt-4">
-            <div className="flex items-center gap-2">
-              <Input
-                placeholder="New expense name"
-                value={newExpenseName}
-                onChange={(e) => setNewExpenseName(e.target.value)}
-                className="flex-1"
-              />
-              <Input
-                type="number"
-                placeholder="Amount"
-                value={newExpenseAmount}
-                onChange={(e) => setNewExpenseAmount(e.target.value)}
-                className="w-24"
-              />
-              <Button
-                onClick={addExpense}
-                size="icon"
-                className="flex-shrink-0"
-              >
-                <Plus className="h-4 w-4" />
-              </Button>
-            </div>
+          <div className="flex items-center gap-2">
+          <Input
+            placeholder="New expense name"
+            value={newExpenseName}
+            onChange={(e) => setNewExpenseName(e.target.value)}
+            className="flex-1"
+          />
+          <div className="relative w-24">
+            <span className="pointer-events-none absolute left-2 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+            <Input
+              type="number"
+              placeholder="0"
+              value={newExpenseAmount}
+              onChange={(e) => setNewExpenseAmount(e.target.value)}
+              className="w-24 pl-5"
+            />
+          </div>
+          <Button
+            onClick={addExpense}
+            size="icon"
+            className="flex-shrink-0"
+          >
+            <Plus className="h-4 w-4" />
+          </Button>
+        </div>
           </div>
         </CardContent>
       </Card>

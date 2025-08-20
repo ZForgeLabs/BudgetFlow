@@ -1,9 +1,15 @@
 "use client";
 
-import React, { useState } from "react";
+import { supabase } from "@/lib/supabase/client";
+import React, { useState, useEffect } from "react";
 import FinancialSummary from "@/components/dashboard/FinancialSummary";
 import IncomeExpenseForm from "@/components/budget/IncomeExpenseForm";
 import SavingsBins from "@/components/budget/SavingsBins";
+import { Button } from "@/components/ui/button";
+import { useRouter } from "next/navigation";
+import { Input } from "@/components/ui/input";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
+import SpendingCharts from "@/components/dashboard/SpendingCharts";
 
 interface Expense {
   id: string;
@@ -50,6 +56,34 @@ export default function Home() {
       monthlyAllocation: 800,
     },
   ]);
+const [isLoggedIn, setIsLoggedIn] = useState(false);
+const router = useRouter();
+const [signingOut, setSigningOut] = useState(false);
+
+const [subs, setSubs] = useState<any[]>([]);
+const [subName, setSubName] = useState("");
+const [subAmount, setSubAmount] = useState<number | "">("");
+const [subOccurrence, setSubOccurrence] = useState<"monthly" | "bi-monthly" | "annually">("monthly");
+const [subStartDate, setSubStartDate] = useState("");
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => setIsLoggedIn(!!session));
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, session) =>
+      setIsLoggedIn(!!session)
+    );
+    return () => sub.subscription.unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    const loadSubs = async () => {
+      const res = await fetch("/api/subscriptions", { cache: "no-store" });
+      if (res.ok) {
+        const { items } = await res.json();
+        setSubs(items);
+      }
+    };
+    if (isLoggedIn) loadSubs();
+  }, [isLoggedIn]);
 
   // Calculate totals
   const totalExpenses = fixedExpenses.reduce(
@@ -63,6 +97,20 @@ export default function Home() {
   const remainingBalance = monthlyIncome - totalExpenses - totalSavings;
   const availableForSavings = monthlyIncome - totalExpenses;
 
+  const feedbackUrl = process.env.NEXT_PUBLIC_FEEDBACK_URL || "https://docs.google.com";
+
+  const monthlyize = (occurrence: string, amount: number) => {
+    if (occurrence === "monthly") return amount;
+    if (occurrence === "bi-monthly") return amount / 2; // every 2 months
+    if (occurrence === "annually") return amount / 12;
+    return amount;
+  };
+
+  const totalSubscriptionsMonthly = subs.reduce((sum, s) => {
+    const amt = Number(s.amount) || 0;
+    return sum + monthlyize(String(s.occurrence ?? "monthly"), amt);
+  }, 0);
+
   return (
     <main className="min-h-screen bg-gray-50 p-4 md:p-6 lg:p-8">
       <div className="max-w-7xl mx-auto space-y-6">
@@ -75,12 +123,39 @@ export default function Home() {
           </p>
         </div>
 
+        <div className="flex justify-end mb-4">
+          {isLoggedIn ? (
+            <Button
+              variant="secondary"
+              disabled={signingOut}
+              onClick={async () => {
+                setSigningOut(true);
+                await supabase.auth.signOut();
+                router.replace("/login"); // immediately send user to login
+              }}
+            >
+              {signingOut ? "Signing out..." : "Sign out"}
+            </Button>
+          ) : (
+            <Button asChild>
+              <a href="/login">Log in</a>
+            </Button>
+          )}
+        </div>
+
         {/* Financial Summary */}
         <FinancialSummary
           monthlyIncome={monthlyIncome}
           totalExpenses={totalExpenses}
           totalSavings={totalSavings}
           remainingBalance={remainingBalance}
+        />
+
+        {/* Charts */}
+        <SpendingCharts
+          monthlyIncome={monthlyIncome}
+          totalFixedExpenses={totalExpenses}
+          totalSubscriptionsMonthly={totalSubscriptionsMonthly}
         />
 
         {/* Income and Expenses Form */}
@@ -98,6 +173,94 @@ export default function Home() {
           onBinsChange={setSavingsBins}
         />
 
+        {/* Subscriptions */}
+        <div className="bg-white border rounded-lg p-4 space-y-4">
+          <div>
+            <h3 className="font-semibold mb-2">Subscriptions</h3>
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-2">
+                <Input
+                  placeholder="Name (e.g., Netflix)"
+                  value={subName}
+                  onChange={(e) => setSubName(e.target.value)}
+                />
+                <div className="relative">
+                  <span className="pointer-events-none absolute left-2 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+                  <Input
+                    type="number"
+                    placeholder="0"
+                    value={subAmount}
+                    onChange={(e) => setSubAmount(e.target.value === "" ? "" : Number(e.target.value))}
+                    className="pl-5"
+                  />
+                </div>
+                <Select value={subOccurrence} onValueChange={(v) => setSubOccurrence(v as any)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Occurrence" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="monthly">Monthly</SelectItem>
+                    <SelectItem value="bi-monthly">Bi-monthly</SelectItem>
+                    <SelectItem value="annually">Annually</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Input
+                  type="date"
+                  value={subStartDate}
+                  onChange={(e) => setSubStartDate(e.target.value)}
+                />
+                <Button
+                  onClick={async () => {
+                    if (!subName || subAmount === "" || !subOccurrence || !subStartDate) return;
+                    const res = await fetch("/api/subscriptions", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({
+                        name: subName,
+                        amount: Number(subAmount),
+                        occurrence: subOccurrence,
+                        startDate: subStartDate,
+                      }),
+                    });
+                    if (res.ok) {
+                      const r2 = await fetch("/api/subscriptions", { cache: "no-store" });
+                      const { items } = await r2.json();
+                      setSubs(items);
+                      setSubName("");
+                      setSubAmount("");
+                      setSubOccurrence("monthly");
+                      setSubStartDate("");
+                    }
+                  }}
+                >
+                  Add
+                </Button>
+              </div>
+          </div>
+
+          <ul className="text-sm space-y-1">
+            {subs.length === 0 ? (
+              <li className="text-gray-500">No subscriptions yet.</li>
+            ) : (
+              subs.map((s) => (
+                <li key={s.id} className="flex items-center justify-between">
+                  <span>
+                    {s.name} — ${Number(s.amount).toFixed(2)} — Next: {new Date(s.next_payment_date).toLocaleDateString()}
+                  </span>
+                  <Button
+                    variant="secondary"
+                    onClick={async () => {
+                      await fetch(`/api/subscriptions?id=${s.id}`, { method: "DELETE" });
+                      setSubs((prev) => prev.filter((x) => x.id !== s.id));
+                    }}
+                  >
+                    Delete
+                  </Button>
+                </li>
+              ))
+            )}
+          </ul>
+        </div>
+
         {/* Quick Tips */}
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
           <h3 className="font-semibold text-blue-900 mb-2">💡 Quick Tips</h3>
@@ -108,6 +271,23 @@ export default function Home() {
             <li>• Automate your savings to stay on track</li>
           </ul>
         </div>
+
+        {/* Feedback */}
+        <div className="pt-6">
+  <div className="flex justify-center">
+    <Button asChild>
+      <a
+        href="https://docs.google.com/forms/d/e/1FAIpQLSeju0-ry23OahtQk06yAVfhuUl-aOY5v5MKsHX_3iKxOTbssQ/viewform?usp=header"
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="Suggest Feedback on Google Docs"
+      >
+        Suggest Feedback
+      </a>
+    </Button>
+  </div>
+</div>
+
       </div>
     </main>
   );
