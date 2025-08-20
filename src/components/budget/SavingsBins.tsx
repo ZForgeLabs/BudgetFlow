@@ -217,7 +217,7 @@ const SavingsBins = ({
     } catch (e) {}
   };
 
-  const addToSavedAmount = (id: string) => {
+  const addToSavedAmount = async (id: string) => {
     const raw = savedInputs[id] ?? "";
     const delta = parseFloat(raw) || 0;
     if (delta <= 0) {
