@@ -8,17 +8,26 @@ export async function GET() {
 	try {
 		const supabase = createRouteHandlerClient({ cookies });
 		const { data: { user } } = await supabase.auth.getUser();
-		if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+		if (!user) {
+			console.log("Subscriptions GET - unauthorized");
+			return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+		}
 
+		console.log("Subscriptions GET - fetching for user_id:", user.id);
 		const { data, error } = await supabase
 			.from("subscriptions")
 			.select("id, name, amount, occurrence, start_date, created_at")
 			.eq("user_id", user.id)
 			.order("created_at", { ascending: false });
 
-		if (error) throw error;
+		if (error) {
+			console.log("Subscriptions GET - database error:", error);
+			throw error;
+		}
+		console.log("Subscriptions GET - success, found items:", data?.length || 0);
 		return NextResponse.json({ items: data ?? [] });
-	} catch {
+	} catch (error) {
+		console.log("Subscriptions GET - caught error:", error);
 		return NextResponse.json({ error: "Failed to fetch" }, { status: 500 });
 	}
 }
@@ -26,18 +35,25 @@ export async function GET() {
 export async function POST(req: NextRequest) {
 	try {
 		const body = await req.json();
+		console.log("Subscriptions POST - received body:", body);
 		const { name, amount, occurrence, startDate } = body ?? {};
 		if (!name || amount === undefined || !occurrence || !startDate) {
+			console.log("Subscriptions POST - validation failed:", { name, amount, occurrence, startDate });
 			return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
 		}
 		if (!allowed.has(occurrence)) {
+			console.log("Subscriptions POST - invalid occurrence:", occurrence);
 			return NextResponse.json({ error: "Invalid occurrence" }, { status: 400 });
 		}
 
 		const supabase = createRouteHandlerClient({ cookies });
 		const { data: { user } } = await supabase.auth.getUser();
-		if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+		if (!user) {
+			console.log("Subscriptions POST - unauthorized");
+			return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+		}
 
+		console.log("Subscriptions POST - inserting with user_id:", user.id);
 		const { data, error } = await supabase
 			.from("subscriptions")
 			.insert({
@@ -50,9 +66,14 @@ export async function POST(req: NextRequest) {
 			.select("id")
 			.single();
 
-		if (error) throw error;
+		if (error) {
+			console.log("Subscriptions POST - database error:", error);
+			throw error;
+		}
+		console.log("Subscriptions POST - success, inserted id:", data?.id);
 		return NextResponse.json({ ok: true, id: data?.id ?? null });
-	} catch {
+	} catch (error) {
+		console.log("Subscriptions POST - caught error:", error);
 		return NextResponse.json({ error: "Invalid request" }, { status: 400 });
 	}
 }
