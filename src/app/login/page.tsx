@@ -9,6 +9,7 @@ import { Icons } from "@/components/ui/icons";
 
 export default function LoginPage() {
   const router = useRouter();
+  const redirectTo = typeof window !== "undefined" ? `${window.location.origin}/auth/callback` : undefined;
 
   useEffect(() => {
     let mounted = true;
@@ -77,6 +78,7 @@ export default function LoginPage() {
                 supabaseClient={supabase}
                 appearance={{ theme: ThemeSupa }}
                 providers={[]}
+                redirectTo={redirectTo}
               />
             </div>
           </div>
