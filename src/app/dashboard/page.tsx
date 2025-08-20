@@ -192,25 +192,42 @@ export default function DashboardPage() {
               <Input type="date" value={subStartDate} onChange={(e) => setSubStartDate(e.target.value)} />
               <Button
                 onClick={async () => {
-                  if (!subName || subAmount === "" || !subOccurrence || !subStartDate) return;
-                  const res = await fetch("/api/subscriptions", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
+                  console.log("Adding subscription:", { subName, subAmount, subOccurrence, subStartDate });
+                  if (!subName || subAmount === "" || !subOccurrence || !subStartDate) {
+                    console.log("Validation failed - missing fields");
+                    return;
+                  }
+                  try {
+                    const payload = {
                       name: subName,
                       amount: Number(subAmount),
                       occurrence: subOccurrence,
                       startDate: subStartDate,
-                    }),
-                  });
-                  if (res.ok) {
-                    const r2 = await fetch("/api/subscriptions", { cache: "no-store" });
-                    const { items } = await r2.json();
-                    setSubs(items);
-                    setSubName("");
-                    setSubAmount("");
-                    setSubOccurrence("monthly");
-                    setSubStartDate("");
+                    };
+                    console.log("Sending payload:", payload);
+                    const res = await fetch("/api/subscriptions", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify(payload),
+                    });
+                    console.log("Response status:", res.status);
+                    if (res.ok) {
+                      const data = await res.json();
+                      console.log("Response data:", data);
+                      const r2 = await fetch("/api/subscriptions", { cache: "no-store" });
+                      const { items } = await r2.json();
+                      console.log("Updated subscriptions:", items);
+                      setSubs(items);
+                      setSubName("");
+                      setSubAmount("");
+                      setSubOccurrence("monthly");
+                      setSubStartDate("");
+                    } else {
+                      const errorText = await res.text();
+                      console.error("Failed to add subscription:", errorText);
+                    }
+                  } catch (error) {
+                    console.error("Error adding subscription:", error);
                   }
                 }}
               >

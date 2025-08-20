@@ -427,11 +427,11 @@ const SavingsBins = ({
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                           <div className="space-y-2">
                             <Label className="text-sm">Frequency</Label>
-                            <div className="inline-flex flex-wrap items-center gap-2">
-                              <div className="flex rounded-full bg-gray-100 p-1">
+                            <div className="space-y-2">
+                              <div className="flex flex-col space-y-1">
                                 <button
                                   type="button"
-                                  className={`px-3 py-1 text-sm rounded-full transition-colors ${!bin.scheduledFrequency ? "bg-blue-600 text-white" : "text-gray-700 hover:bg-gray-200"}`}
+                                  className={`px-3 py-2 text-sm rounded-md transition-colors text-left ${!bin.scheduledFrequency ? "bg-blue-600 text-white" : "text-gray-700 hover:bg-gray-200 border"}`}
                                   onClick={() =>
                                     updateBinScheduleLocal(
                                       bin.id,
@@ -447,7 +447,7 @@ const SavingsBins = ({
                                   <button
                                     key={f.value}
                                     type="button"
-                                    className={`px-3 py-1 text-sm rounded-full transition-colors ${bin.scheduledFrequency === f.value ? "bg-blue-600 text-white" : "text-gray-700 hover:bg-gray-200"}`}
+                                    className={`px-3 py-2 text-sm rounded-md transition-colors text-left ${bin.scheduledFrequency === f.value ? "bg-blue-600 text-white" : "text-gray-700 hover:bg-gray-200 border"}`}
                                     onClick={() =>
                                       updateBinScheduleLocal(
                                         bin.id,
