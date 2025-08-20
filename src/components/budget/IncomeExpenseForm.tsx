@@ -259,6 +259,16 @@ const IncomeExpenseForm = ({
           </Button>
         </div>
           </div>
+
+          {/* Total Section */}
+          <div className="border-t pt-4">
+            <div className="flex items-center justify-between">
+              <span className="font-semibold text-gray-900">Total Fixed Monthly Expenses:</span>
+              <span className="text-xl font-bold text-gray-900">
+                ${expenses.reduce((sum, expense) => sum + expense.amount, 0).toLocaleString()}
+              </span>
+            </div>
+          </div>
         </CardContent>
       </Card>
     </div>
