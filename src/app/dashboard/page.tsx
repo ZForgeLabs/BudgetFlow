@@ -77,9 +77,13 @@ export default function DashboardPage() {
       }
       // subscriptions
       const resSubs = await fetch("/api/subscriptions", { cache: "no-store" });
+      console.log("Subscriptions API response:", resSubs.status);
       if (resSubs.ok) {
         const { items } = await resSubs.json();
+        console.log("Setting subscriptions:", items);
         setSubs(items);
+      } else {
+        console.error("Failed to load subscriptions:", await resSubs.text());
       }
     };
     if (isLoggedIn) loadAll();
@@ -222,7 +226,7 @@ export default function DashboardPage() {
               subs.map((s) => (
                 <li key={s.id} className="flex items-center justify-between">
                   <span>
-                    {s.name} — ${Number(s.amount).toFixed(2)} — Next: {new Date(s.next_payment_date).toLocaleDateString()}
+                    {s.name} — ${Number(s.amount).toFixed(2)} — Started: {new Date(s.start_date).toLocaleDateString()}
                   </span>
                   <Button
                     variant="secondary"

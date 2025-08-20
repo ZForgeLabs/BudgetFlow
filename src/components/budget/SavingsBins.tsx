@@ -152,6 +152,11 @@ const SavingsBins = ({
   const [newBinName, setNewBinName] = useState("");
   const [newBinGoal, setNewBinGoal] = useState("");
 
+  // Update internal state when props change
+  useEffect(() => {
+    setBins(savingsBins);
+  }, [savingsBins]);
+
   // UI state
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [savedInputs, setSavedInputs] = useState<Record<string, string>>({});
