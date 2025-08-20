@@ -519,24 +519,24 @@ const SavingsBins = ({
                               </div>
                             </>
                           )}
-                          <div className="flex items-end">
-                            <Button
-                              className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-                              onClick={() =>
-                                submitSchedule(
-                                  bin.id,
-                                  bin.scheduledFrequency ?? null,
-                                  bin.customMonth ?? null,
-                                  bin.customDay ?? null,
-                                )
-                              }
-                            >
-                              Save Schedule
-                            </Button>
-                          </div>
+                        </div>
+                        <div className="mt-4">
+                          <Button
+                            className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                            onClick={() =>
+                              submitSchedule(
+                                bin.id,
+                                bin.scheduledFrequency ?? null,
+                                bin.customMonth ?? null,
+                                bin.customDay ?? null,
+                              )
+                            }
+                          >
+                            Save Schedule
+                          </Button>
                         </div>
                         {bin.scheduledFrequency && (
-                          <div className="text-xs text-gray-600">
+                          <div className="text-xs text-gray-600 mt-2">
                             Scheduled: {frequencyOptions.find(f => f.value === bin.scheduledFrequency)?.label}
                             {bin.scheduledFrequency === "custom" && bin.customMonth && bin.customDay
                               ? ` on ${monthOptions.find(m => Number(m.value) === bin.customMonth)?.label} ${bin.customDay}`
