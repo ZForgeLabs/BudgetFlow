@@ -37,7 +37,14 @@ export default function SpendingCharts({
 		{ name: "Remaining", value: remaining },
 	];
 
-	const barData = [{ name: "Monthly", Income: monthlyIncome, Outflow: totalOutflow }];
+	const barData = [
+		{ 
+			name: "Monthly", 
+			Income: monthlyIncome, 
+			"Fixed Expenses": totalFixedExpenses,
+			"Subscriptions": totalSubscriptionsMonthly 
+		}
+	];
 
 	return (
 		<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -52,7 +59,8 @@ export default function SpendingCharts({
 							<Tooltip formatter={(v: number) => `$${Number(v).toLocaleString()}`} />
 							<Legend />
 							<Bar dataKey="Income" fill="#10b981" />
-							<Bar dataKey="Outflow" fill="#ef4444" />
+							<Bar dataKey="Fixed Expenses" fill="#ef4444" />
+							<Bar dataKey="Subscriptions" fill="#f59e0b" />
 						</BarChart>
 					</ResponsiveContainer>
 				</div>

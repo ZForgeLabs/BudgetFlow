@@ -10,6 +10,7 @@ import {
 interface FinancialSummaryProps {
   monthlyIncome?: number;
   totalExpenses?: number;
+  totalSubscriptions?: number;
   totalSavings?: number;
   remainingBalance?: number;
 }
@@ -17,11 +18,13 @@ interface FinancialSummaryProps {
 const FinancialSummary = ({
   monthlyIncome = 5000,
   totalExpenses = 1830,
+  totalSubscriptions = 0,
   totalSavings = 1600,
   remainingBalance = 1570,
 }: FinancialSummaryProps) => {
   const isBalancePositive = remainingBalance >= 0;
   const afterExpensesBalance = monthlyIncome - totalExpenses;
+  const afterSubscriptionsBalance = afterExpensesBalance - totalSubscriptions;
 
   return (
     <Card className="w-full bg-white shadow-sm">
@@ -53,6 +56,21 @@ const FinancialSummary = ({
               </p>
               <h3 className="text-xl lg:text-2xl font-bold text-gray-900">
                 ${totalExpenses.toLocaleString()}
+              </h3>
+            </div>
+          </div>
+
+          {/* Subscriptions */}
+          <div className="flex items-center space-x-4">
+            <div className="p-3 rounded-full bg-orange-100">
+              <DollarSignIcon className="h-6 w-6 text-orange-600" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-500">
+                Subscriptions
+              </p>
+              <h3 className="text-xl lg:text-2xl font-bold text-gray-900">
+                ${totalSubscriptions.toLocaleString()}
               </h3>
             </div>
           </div>
@@ -93,14 +111,25 @@ const FinancialSummary = ({
 
         {/* Additional Info */}
         <div className="mt-4 pt-4 border-t border-gray-100">
-          <div className="text-sm text-gray-600">
-            After expenses:{" "}
-            <span className="font-semibold">
-              ${afterExpensesBalance.toLocaleString()}
-            </span>
-            {afterExpensesBalance < 0 && (
-              <span className="text-red-600 ml-1">(Deficit)</span>
-            )}
+          <div className="text-sm text-gray-600 space-y-1">
+            <div>
+              After expenses:{" "}
+              <span className="font-semibold">
+                ${afterExpensesBalance.toLocaleString()}
+              </span>
+              {afterExpensesBalance < 0 && (
+                <span className="text-red-600 ml-1">(Deficit)</span>
+              )}
+            </div>
+            <div>
+              After subscriptions:{" "}
+              <span className="font-semibold">
+                ${afterSubscriptionsBalance.toLocaleString()}
+              </span>
+              {afterSubscriptionsBalance < 0 && (
+                <span className="text-red-600 ml-1">(Deficit)</span>
+              )}
+            </div>
           </div>
         </div>
       </CardContent>

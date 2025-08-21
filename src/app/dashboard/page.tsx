@@ -107,6 +107,11 @@ export default function DashboardPage() {
     return sum + monthlyize(String(s.occurrence ?? "monthly"), amt);
   }, 0);
 
+  // Calculate total subscription amount (not monthlyized)
+  const totalSubscriptionsAmount = subs.reduce((sum, s) => {
+    return sum + (Number(s.amount) || 0);
+  }, 0);
+
   return (
     <main className="min-h-screen bg-gray-50 p-4 md:p-6 lg:p-8">
       <div className="max-w-7xl mx-auto space-y-6">
@@ -138,8 +143,9 @@ export default function DashboardPage() {
         <FinancialSummary
           monthlyIncome={monthlyIncome}
           totalExpenses={totalExpenses}
+          totalSubscriptions={totalSubscriptionsMonthly}
           totalSavings={totalSavings}
-          remainingBalance={remainingBalance}
+          remainingBalance={remainingBalance - totalSubscriptionsMonthly}
         />
 
         <SpendingCharts
@@ -164,6 +170,10 @@ export default function DashboardPage() {
         <div className="bg-white border rounded-lg p-4 space-y-4">
           <div>
             <h3 className="font-semibold mb-2">Subscriptions</h3>
+            <div className="flex items-center justify-between mb-4">
+              <span className="text-sm text-gray-600">Total Monthly Subscriptions:</span>
+              <span className="font-semibold text-gray-900">${totalSubscriptionsMonthly.toFixed(2)}</span>
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-5 gap-2">
               <Input
                 placeholder="Name (e.g., Netflix)"
