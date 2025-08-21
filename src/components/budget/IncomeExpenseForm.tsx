@@ -203,7 +203,7 @@ const IncomeExpenseForm = ({
                 type="button" 
                 variant="outline" 
                 onClick={cancelEditingIncome}
-                className="border-white/30 text-white hover:bg-white/20 text-sm px-3 py-1"
+                className="border-white/30 text-black bg-white/90 hover:bg-white text-sm px-3 py-1"
               >
                 Cancel
               </Button>
@@ -251,7 +251,7 @@ const IncomeExpenseForm = ({
                   variant="outline"
                   size="icon"
                   onClick={() => removeExpense(expense.id)}
-                  className="flex-shrink-0 border-white/30 text-white hover:bg-white/20"
+                  className="flex-shrink-0 border-white/30 text-black bg-white/90 hover:bg-white"
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>

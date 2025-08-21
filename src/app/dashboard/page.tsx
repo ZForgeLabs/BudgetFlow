@@ -124,7 +124,7 @@ export default function DashboardPage() {
         <div className="flex justify-end mb-4">
           {isLoggedIn ? (
             <Button
-              variant="secondary"
+              className="bg-blue-400 hover:bg-blue-500 text-white"
               disabled={signingOut}
               onClick={async () => {
                 setSigningOut(true);
@@ -154,18 +154,6 @@ export default function DashboardPage() {
           fixedExpenses={fixedExpenses}
           onIncomeChange={setMonthlyIncome}
           onExpensesChange={setFixedExpenses}
-        />
-
-        <SpendingCharts
-          monthlyIncome={monthlyIncome}
-          totalFixedExpenses={totalExpenses}
-          totalSubscriptionsMonthly={totalSubscriptionsMonthly}
-        />
-
-        <SavingsBins
-          savingsBins={savingsBins}
-          availableAmount={availableForSavings}
-          onBinsChange={setSavingsBins}
         />
 
         <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl p-6 text-white shadow-lg hover:shadow-xl transition-all duration-300">
@@ -329,6 +317,18 @@ export default function DashboardPage() {
             )}
           </div>
         </div>
+
+        <SpendingCharts
+          monthlyIncome={monthlyIncome}
+          totalFixedExpenses={totalExpenses}
+          totalSubscriptionsMonthly={totalSubscriptionsMonthly}
+        />
+
+        <SavingsBins
+          savingsBins={savingsBins}
+          availableAmount={availableForSavings}
+          onBinsChange={setSavingsBins}
+        />
       </div>
     </main>
   );
