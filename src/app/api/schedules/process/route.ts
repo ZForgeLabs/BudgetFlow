@@ -40,21 +40,21 @@ export async function POST(req: NextRequest) {
       switch (schedule.frequency) {
         case 'weekly':
           // Transfer every week on the same day of the week
-          const scheduleDay = new Date(schedule.created_at).getDay();
-          shouldTransfer = today.getDay() === scheduleDay;
+          const weeklyScheduleDay = new Date(schedule.created_at).getDay();
+          shouldTransfer = today.getDay() === weeklyScheduleDay;
           break;
 
         case 'semi-weekly':
           // Transfer every 2 weeks on the same day
           const weeksSinceCreation = Math.floor((today.getTime() - new Date(schedule.created_at).getTime()) / (7 * 24 * 60 * 60 * 1000));
-          const scheduleDay = new Date(schedule.created_at).getDay();
-          shouldTransfer = today.getDay() === scheduleDay && weeksSinceCreation % 2 === 0;
+          const semiWeeklyScheduleDay = new Date(schedule.created_at).getDay();
+          shouldTransfer = today.getDay() === semiWeeklyScheduleDay && weeksSinceCreation % 2 === 0;
           break;
 
         case 'monthly':
           // Transfer on the same day of the month
-          const scheduleDate = new Date(schedule.created_at).getDate();
-          shouldTransfer = today.getDate() === scheduleDate;
+          const monthlyScheduleDate = new Date(schedule.created_at).getDate();
+          shouldTransfer = today.getDate() === monthlyScheduleDate;
           break;
 
         case 'custom':
