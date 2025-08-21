@@ -415,6 +415,21 @@ const SavingsBins = ({
     return Math.max(0, Math.min(pct, 100));
   };
 
+  const getAllocationTitle = (frequency: SavingsBin["scheduledFrequency"]) => {
+    switch (frequency) {
+      case 'weekly':
+        return 'Weekly allocation';
+      case 'semi-weekly':
+        return 'Semi-weekly allocation';
+      case 'monthly':
+        return 'Monthly allocation';
+      case 'custom':
+        return 'Custom allocation';
+      default:
+        return 'Monthly allocation';
+    }
+  };
+
   return (
     <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-6 text-white shadow-lg hover:shadow-xl transition-all duration-300">
       <div className="flex items-center justify-between mb-6">
@@ -511,7 +526,7 @@ const SavingsBins = ({
 
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm text-blue-100">
-                    <span>Monthly allocation</span>
+                    <span>{getAllocationTitle(bin.scheduledFrequency)}</span>
                     <span>${bin.monthlyAllocation.toLocaleString()}</span>
                   </div>
                   <Progress value={allocationPct} className="h-2" indicatorClassName="bg-yellow-500" />
@@ -537,7 +552,7 @@ const SavingsBins = ({
                       </div>
 
                       <div className="space-y-2">
-                        <Label className="text-sm text-blue-100">Monthly allocation</Label>
+                        <Label className="text-sm text-blue-100">{getAllocationTitle(bin.scheduledFrequency)}</Label>
                         <Input
                           type="number"
                           placeholder="0"
@@ -553,7 +568,7 @@ const SavingsBins = ({
                       </div>
 
                       <div className="space-y-2">
-                        <div className="text-sm font-medium text-white">Scheduled monthly transfer</div>
+                        <div className="text-sm font-medium text-white">Scheduled transfer</div>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                           <div className="space-y-2">
                             <Label className="text-sm text-blue-100">Frequency</Label>
