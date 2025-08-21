@@ -437,7 +437,7 @@ export default function DashboardPage() {
           savingsBins={savingsBins}
           availableAmount={availableForSavings}
           onBinsChange={setSavingsBins}
-          refreshDashboardData={refreshDashboardData}
+          onRefresh={refreshDashboardData}
         />
 
         {/* Feedback Button */}
