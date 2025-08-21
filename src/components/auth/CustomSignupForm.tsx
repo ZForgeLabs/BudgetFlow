@@ -55,11 +55,27 @@ export default function CustomSignupForm({ onSuccess, onSwitchToLogin }: CustomS
 
       if (error) {
         console.error("Signup error:", error);
-        setError(error.message);
+        if (error.message.includes("already registered")) {
+          setError("An account with this email already exists. Please sign in instead.");
+        } else {
+          setError(error.message);
+        }
       } else if (data.user) {
         // Success! User created
         console.log("User created successfully:", data.user);
         onSuccess();
+      } else if (data.session) {
+        // User already exists and is signed in
+        console.log("User already exists and signed in:", data.session);
+        onSuccess();
+      } else {
+        // Check if user exists but needs verification
+        console.log("Signup response:", data);
+        if (data.user && !data.user.email_confirmed_at) {
+          setError("Account created! Please check your email for verification link.");
+        } else {
+          setError("Something went wrong. Please try again.");
+        }
       }
     } catch (err) {
       setError("An unexpected error occurred");
