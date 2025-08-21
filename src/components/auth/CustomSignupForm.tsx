@@ -63,19 +63,21 @@ export default function CustomSignupForm({ onSuccess, onSwitchToLogin }: CustomS
       } else if (data.user) {
         // Success! User created
         console.log("User created successfully:", data.user);
-        onSuccess();
+        
+        // Check if email confirmation is required
+        if (data.user.email_confirmed_at === null) {
+          setError("Account created! Please check your email for verification link.");
+        } else {
+          onSuccess();
+        }
       } else if (data.session) {
         // User already exists and is signed in
         console.log("User already exists and signed in:", data.session);
         onSuccess();
       } else {
-        // Check if user exists but needs verification
+        // Fallback case
         console.log("Signup response:", data);
-        if (data.user && !data.user.email_confirmed_at) {
-          setError("Account created! Please check your email for verification link.");
-        } else {
-          setError("Something went wrong. Please try again.");
-        }
+        setError("Something went wrong. Please try again.");
       }
     } catch (err) {
       setError("An unexpected error occurred");
