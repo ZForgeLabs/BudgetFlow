@@ -26,6 +26,7 @@ type SpendingChartsProps = {
 	totalFixedExpenses: number;
 	totalSubscriptionsMonthly: number;
 	totalSavings: number;
+	totalSaved: number;
 };
 
 // Modern gradient colors
@@ -84,6 +85,7 @@ export default function SpendingCharts({
 	totalFixedExpenses,
 	totalSubscriptionsMonthly,
 	totalSavings,
+	totalSaved,
 }: SpendingChartsProps) {
 	const totalOutflow = totalFixedExpenses + totalSubscriptionsMonthly + totalSavings;
 	const leftOver = Math.max(0, monthlyIncome - totalOutflow);
@@ -184,80 +186,4 @@ export default function SpendingCharts({
 								className="hover:opacity-80 transition-opacity"
 							>
 								{barData.map((entry, index) => (
-									<Cell key={`cell-${index}`} fill={entry.color} />
-								))}
-							</Bar>
-						</BarChart>
-					</ResponsiveContainer>
-				</div>
-				{/* Legend */}
-				<div className="flex flex-wrap justify-center gap-4 mt-4 pt-4 border-t border-gray-200">
-					{barData.map((item, index) => (
-						<div key={index} className="flex items-center space-x-2">
-							<div 
-								className="w-3 h-3 rounded-full" 
-								style={{ backgroundColor: item.color }}
-							></div>
-							<span className="text-sm text-gray-600">{item.name}</span>
-						</div>
-					))}
-				</div>
-			</div>
-
-			{/* Simple Pie Chart */}
-			<div className="bg-gradient-to-br from-white to-gray-50 border border-gray-200 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300">
-				<div className="flex items-center justify-between mb-6">
-					<h3 className="text-xl font-bold text-gray-800">Budget Distribution</h3>
-					<div className="text-right">
-						<p className="text-2xl font-bold text-gray-800">${monthlyIncome.toLocaleString()}</p>
-						<p className="text-sm text-gray-500">Total Monthly Income</p>
-					</div>
-				</div>
-				<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-					<div className="h-80 flex items-center justify-center">
-						<ResponsiveContainer width="100%" height="100%">
-							<PieChart>
-								<Pie
-									data={filteredPieData}
-									cx="50%"
-									cy="50%"
-									labelLine={false}
-									label={({ name, percentage }) => `${name}: ${percentage}%`}
-									outerRadius={120}
-									fill="#8884d8"
-									dataKey="value"
-								>
-									{filteredPieData.map((entry, index) => (
-										<Cell key={`cell-${index}`} fill={entry.color} />
-									))}
-								</Pie>
-								<Tooltip content={<PieTooltip />} />
-							</PieChart>
-						</ResponsiveContainer>
-					</div>
-					<div className="flex flex-col justify-center space-y-4">
-						{filteredPieData.map((item, index) => (
-							<div key={index} className="flex items-center justify-between p-3 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow">
-								<div className="flex items-center space-x-3">
-									<div 
-										className="w-4 h-4 rounded-full" 
-										style={{ backgroundColor: item.color }}
-									></div>
-									<span className="font-medium text-gray-700">{item.name}</span>
-								</div>
-								<div className="text-right">
-									<p className="font-bold text-gray-800">${item.value.toLocaleString()}</p>
-									<p className="text-xs text-gray-500">
-										{item.percentage}%
-									</p>
-								</div>
-							</div>
-						))}
-					</div>
-				</div>
-			</div>
-		</div>
-	);
-}
-
-
+									<Cell key={`cell-${index}`

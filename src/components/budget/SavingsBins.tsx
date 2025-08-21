@@ -236,6 +236,8 @@ const SavingsBins = ({
   const addToSavedAmount = async (id: string) => {
     const raw = savedInputs[id] ?? "";
     const delta = parseFloat(raw) || 0;
+    console.log('addToSavedAmount called:', { id, raw, delta });
+    
     if (delta <= 0) {
       toast({ title: "Enter a positive amount" });
       return;
@@ -248,6 +250,7 @@ const SavingsBins = ({
     }
     
     const newAmount = bin.currentAmount + delta;
+    console.log('Calculated new amount:', { currentAmount: bin.currentAmount, delta, newAmount });
     
     // Update local state immediately for better UX
     const updatedBins = bins.map((bin) =>
@@ -259,17 +262,21 @@ const SavingsBins = ({
     
     // Update in database
     try {
+      console.log('Sending PATCH request to /api/bins with:', { id, currentAmount: newAmount });
       const res = await fetch("/api/bins", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id, currentAmount: newAmount }),
       });
       
+      console.log('PATCH response status:', res.status);
+      
       if (!res.ok) {
         const errorText = await res.text();
         console.error('Failed to update saved amount:', errorText);
         toast({ title: "Failed to save amount", description: "Please try again" });
       } else {
+        console.log('Successfully updated saved amount in database');
         toast({ title: "Transfer successful", description: "Saved amount updated" });
       }
     } catch (e) {

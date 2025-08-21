@@ -42,22 +42,43 @@ export async function POST(req: NextRequest) {
 
 export async function PATCH(req: NextRequest) {
 	try {
-		const { id, currentAmount, monthlyAllocation } = await req.json();
+		const body = await req.json();
+		console.log('PATCH /api/bins received:', body);
+
+		const { id, currentAmount, monthlyAllocation } = body;
 		if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
+
 		const supabase = createRouteHandlerClient({ cookies });
 		const { data: { user } } = await supabase.auth.getUser();
 		if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
 		const updates: any = {};
-		if (currentAmount !== undefined) updates.current_amount = currentAmount;
-		if (monthlyAllocation !== undefined) updates.monthly_allocation = monthlyAllocation;
+		if (currentAmount !== undefined) {
+			updates.current_amount = currentAmount;
+			console.log('Updating current_amount to:', currentAmount);
+		}
+		if (monthlyAllocation !== undefined) {
+			updates.monthly_allocation = monthlyAllocation;
+			console.log('Updating monthly_allocation to:', monthlyAllocation);
+		}
+
+		console.log('Final updates object:', updates);
+
 		const { error } = await supabase
 			.from("savings_bins")
 			.update(updates)
 			.eq("id", id)
 			.eq("user_id", user.id);
-		if (error) throw error;
+
+		if (error) {
+			console.error('Supabase update error:', error);
+			throw error;
+		}
+
+		console.log('Successfully updated bin:', id);
 		return NextResponse.json({ ok: true });
-	} catch {
+	} catch (error) {
+		console.error('PATCH /api/bins error:', error);
 		return NextResponse.json({ error: "Invalid request" }, { status: 400 });
 	}
 }
