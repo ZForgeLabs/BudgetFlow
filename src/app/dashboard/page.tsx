@@ -333,7 +333,7 @@ export default function DashboardPage() {
                       variant="outline"
                       size="sm"
                       onClick={() => setShowAllSubscriptions(!showAllSubscriptions)}
-                      className="border-white/30 text-white hover:bg-white/20 transition-all duration-200"
+                      className="border-white/30 text-black bg-white/90 hover:bg-white transition-all duration-200"
                     >
                       {showAllSubscriptions ? (
                         <>
