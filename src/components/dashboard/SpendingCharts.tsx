@@ -13,6 +13,12 @@ import {
 	PieChart,
 	Pie,
 	Cell,
+	RadialBarChart,
+	RadialBar,
+	LineChart,
+	Line,
+	Area,
+	AreaChart,
 } from "recharts";
 
 type SpendingChartsProps = {
@@ -21,7 +27,31 @@ type SpendingChartsProps = {
 	totalSubscriptionsMonthly: number;
 };
 
-const COLORS = ["#ef4444", "#3b82f6", "#10b981", "#f59e0b"]; // red, blue, green, amber
+// Modern gradient colors
+const COLORS = {
+	income: "#10b981",
+	expenses: "#ef4444", 
+	subscriptions: "#f59e0b",
+	remaining: "#8b5cf6",
+	savings: "#3b82f6"
+};
+
+// Custom tooltip component
+const CustomTooltip = ({ active, payload, label }: any) => {
+	if (active && payload && payload.length) {
+		return (
+			<div className="bg-white border border-gray-200 rounded-lg shadow-lg p-4 backdrop-blur-sm">
+				<p className="font-semibold text-gray-800 mb-2">{label}</p>
+				{payload.map((entry: any, index: number) => (
+					<p key={index} className="text-sm" style={{ color: entry.color }}>
+						{entry.name}: <span className="font-semibold">${Number(entry.value).toLocaleString()}</span>
+					</p>
+				))}
+			</div>
+		);
+	}
+	return null;
+};
 
 export default function SpendingCharts({
 	monthlyIncome,
@@ -32,9 +62,9 @@ export default function SpendingCharts({
 	const remaining = Math.max(0, monthlyIncome - totalOutflow);
 
 	const pieData = [
-		{ name: "Fixed Expenses", value: totalFixedExpenses },
-		{ name: "Subscriptions", value: totalSubscriptionsMonthly },
-		{ name: "Remaining", value: remaining },
+		{ name: "Fixed Expenses", value: totalFixedExpenses, color: COLORS.expenses },
+		{ name: "Subscriptions", value: totalSubscriptionsMonthly, color: COLORS.subscriptions },
+		{ name: "Remaining", value: remaining, color: COLORS.remaining },
 	];
 
 	const barData = [
@@ -46,42 +76,146 @@ export default function SpendingCharts({
 		}
 	];
 
+	// Radial data for modern donut chart
+	const radialData = pieData.map(item => ({
+		...item,
+		fill: item.color,
+		stroke: item.color,
+	}));
+
 	return (
-		<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-			<div className="bg-white border rounded-lg p-4">
-				<h3 className="font-semibold mb-3">Income vs Outflow</h3>
-				<div className="h-64">
+		<div className="space-y-6">
+			{/* Modern Bar Chart */}
+			<div className="bg-gradient-to-br from-white to-gray-50 border border-gray-200 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300">
+				<div className="flex items-center justify-between mb-6">
+					<h3 className="text-xl font-bold text-gray-800">Monthly Overview</h3>
+					<div className="flex space-x-4 text-sm">
+						<div className="flex items-center space-x-2">
+							<div className="w-3 h-3 rounded-full bg-green-500"></div>
+							<span className="text-gray-600">Income</span>
+						</div>
+						<div className="flex items-center space-x-2">
+							<div className="w-3 h-3 rounded-full bg-red-500"></div>
+							<span className="text-gray-600">Expenses</span>
+						</div>
+						<div className="flex items-center space-x-2">
+							<div className="w-3 h-3 rounded-full bg-orange-500"></div>
+							<span className="text-gray-600">Subscriptions</span>
+						</div>
+					</div>
+				</div>
+				<div className="h-80">
 					<ResponsiveContainer width="100%" height="100%">
-						<BarChart data={barData}>
-							<CartesianGrid strokeDasharray="3 3" />
-							<XAxis dataKey="name" />
-							<YAxis />
-							<Tooltip formatter={(v: number) => `$${Number(v).toLocaleString()}`} />
-							<Legend />
-							<Bar dataKey="Income" fill="#10b981" />
-							<Bar dataKey="Fixed Expenses" fill="#ef4444" />
-							<Bar dataKey="Subscriptions" fill="#f59e0b" />
+						<BarChart data={barData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+							<CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+							<XAxis 
+								dataKey="name" 
+								axisLine={false}
+								tickLine={false}
+								tick={{ fontSize: 12, fill: '#64748b' }}
+							/>
+							<YAxis 
+								axisLine={false}
+								tickLine={false}
+								tick={{ fontSize: 12, fill: '#64748b' }}
+								tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`}
+							/>
+							<Tooltip content={<CustomTooltip />} />
+							<Bar 
+								dataKey="Income" 
+								fill={COLORS.income}
+								radius={[4, 4, 0, 0]}
+								className="hover:opacity-80 transition-opacity"
+							/>
+							<Bar 
+								dataKey="Fixed Expenses" 
+								fill={COLORS.expenses}
+								radius={[4, 4, 0, 0]}
+								className="hover:opacity-80 transition-opacity"
+							/>
+							<Bar 
+								dataKey="Subscriptions" 
+								fill={COLORS.subscriptions}
+								radius={[4, 4, 0, 0]}
+								className="hover:opacity-80 transition-opacity"
+							/>
 						</BarChart>
 					</ResponsiveContainer>
 				</div>
 			</div>
 
-			<div className="bg-white border rounded-lg p-4">
-				<h3 className="font-semibold mb-3">Breakdown</h3>
-				<div className="h-64">
-					<ResponsiveContainer width="100%" height="100%">
-						<PieChart>
-							<Pie data={pieData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={50} outerRadius={80}>
-								{pieData.map((_, i) => (
-									<Cell key={i} fill={COLORS[i % COLORS.length]} />
-								))}
-							</Pie>
-							<Tooltip formatter={(v: number) => `$${Number(v).toLocaleString()}`} />
-						</PieChart>
-					</ResponsiveContainer>
+			{/* Modern Donut Chart */}
+			<div className="bg-gradient-to-br from-white to-gray-50 border border-gray-200 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300">
+				<div className="flex items-center justify-between mb-6">
+					<h3 className="text-xl font-bold text-gray-800">Spending Breakdown</h3>
+					<div className="text-right">
+						<p className="text-2xl font-bold text-gray-800">${totalOutflow.toLocaleString()}</p>
+						<p className="text-sm text-gray-500">Total Monthly Outflow</p>
+					</div>
 				</div>
-				<div className="mt-2 text-sm text-gray-600">
-					Income: ${monthlyIncome.toLocaleString()} • Outflow: ${totalOutflow.toLocaleString()} • Remaining: ${remaining.toLocaleString()}
+				<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+					<div className="h-80">
+						<ResponsiveContainer width="100%" height="100%">
+							<RadialBarChart cx="50%" cy="50%" innerRadius="60%" outerRadius="90%" data={radialData}>
+								<RadialBar 
+									dataKey="value" 
+									cornerRadius={10}
+									className="hover:opacity-80 transition-opacity"
+								/>
+								<Tooltip content={<CustomTooltip />} />
+							</RadialBarChart>
+						</ResponsiveContainer>
+					</div>
+					<div className="flex flex-col justify-center space-y-4">
+						{pieData.map((item, index) => (
+							<div key={index} className="flex items-center justify-between p-3 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow">
+								<div className="flex items-center space-x-3">
+									<div 
+										className="w-4 h-4 rounded-full" 
+										style={{ backgroundColor: item.color }}
+									></div>
+									<span className="font-medium text-gray-700">{item.name}</span>
+								</div>
+								<div className="text-right">
+									<p className="font-bold text-gray-800">${item.value.toLocaleString()}</p>
+									<p className="text-xs text-gray-500">
+										{((item.value / totalOutflow) * 100).toFixed(1)}%
+									</p>
+								</div>
+							</div>
+						))}
+					</div>
+				</div>
+			</div>
+
+			{/* Summary Cards */}
+			<div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+				<div className="bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl p-4 shadow-lg">
+					<div className="flex items-center justify-between">
+						<div>
+							<p className="text-sm opacity-90">Monthly Income</p>
+							<p className="text-2xl font-bold">${monthlyIncome.toLocaleString()}</p>
+						</div>
+						<div className="text-3xl">💰</div>
+					</div>
+				</div>
+				<div className="bg-gradient-to-r from-red-500 to-red-600 text-white rounded-xl p-4 shadow-lg">
+					<div className="flex items-center justify-between">
+						<div>
+							<p className="text-sm opacity-90">Total Outflow</p>
+							<p className="text-2xl font-bold">${totalOutflow.toLocaleString()}</p>
+						</div>
+						<div className="text-3xl">📊</div>
+					</div>
+				</div>
+				<div className="bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-xl p-4 shadow-lg">
+					<div className="flex items-center justify-between">
+						<div>
+							<p className="text-sm opacity-90">Remaining</p>
+							<p className="text-2xl font-bold">${remaining.toLocaleString()}</p>
+						</div>
+						<div className="text-3xl">💎</div>
+					</div>
 				</div>
 			</div>
 		</div>
