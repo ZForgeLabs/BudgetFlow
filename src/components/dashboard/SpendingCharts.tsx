@@ -25,6 +25,7 @@ type SpendingChartsProps = {
 	monthlyIncome: number;
 	totalFixedExpenses: number;
 	totalSubscriptionsMonthly: number;
+	totalSavings: number;
 };
 
 // Modern gradient colors
@@ -32,8 +33,8 @@ const COLORS = {
 	income: "#10b981",
 	expenses: "#ef4444", 
 	subscriptions: "#f59e0b",
-	remaining: "#8b5cf6",
-	savings: "#3b82f6"
+	savings: "#3b82f6",
+	leftOver: "#8b5cf6"
 };
 
 // Custom tooltip component
@@ -57,27 +58,51 @@ export default function SpendingCharts({
 	monthlyIncome,
 	totalFixedExpenses,
 	totalSubscriptionsMonthly,
+	totalSavings,
 }: SpendingChartsProps) {
-	const totalOutflow = totalFixedExpenses + totalSubscriptionsMonthly;
-	const remaining = Math.max(0, monthlyIncome - totalOutflow);
+	const totalOutflow = totalFixedExpenses + totalSubscriptionsMonthly + totalSavings;
+	const leftOver = Math.max(0, monthlyIncome - totalOutflow);
 
 	const pieData = [
 		{ name: "Fixed Expenses", value: totalFixedExpenses, color: COLORS.expenses },
 		{ name: "Subscriptions", value: totalSubscriptionsMonthly, color: COLORS.subscriptions },
-		{ name: "Remaining", value: remaining, color: COLORS.remaining },
+		{ name: "Savings", value: totalSavings, color: COLORS.savings },
+		{ name: "Left Over", value: leftOver, color: COLORS.leftOver },
 	];
+
+	// Filter out zero values for cleaner display
+	const filteredPieData = pieData.filter(item => item.value > 0);
 
 	const barData = [
 		{ 
-			name: "Monthly", 
-			Income: monthlyIncome, 
-			"Fixed Expenses": totalFixedExpenses,
-			"Subscriptions": totalSubscriptionsMonthly 
+			name: "Income", 
+			value: monthlyIncome,
+			color: COLORS.income
+		},
+		{ 
+			name: "Fixed Expenses", 
+			value: totalFixedExpenses,
+			color: COLORS.expenses
+		},
+		{ 
+			name: "Subscriptions", 
+			value: totalSubscriptionsMonthly,
+			color: COLORS.subscriptions
+		},
+		{ 
+			name: "Savings", 
+			value: totalSavings,
+			color: COLORS.savings
+		},
+		{ 
+			name: "Left Over", 
+			value: leftOver,
+			color: COLORS.leftOver
 		}
 	];
 
 	// Radial data for modern donut chart
-	const radialData = pieData.map(item => ({
+	const radialData = filteredPieData.map(item => ({
 		...item,
 		fill: item.color,
 		stroke: item.color,
@@ -85,62 +110,62 @@ export default function SpendingCharts({
 
 	return (
 		<div className="space-y-6">
-			{/* Modern Bar Chart */}
+			{/* Modern Horizontal Bar Chart */}
 			<div className="bg-gradient-to-br from-white to-gray-50 border border-gray-200 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300">
 				<div className="flex items-center justify-between mb-6">
-					<h3 className="text-xl font-bold text-gray-800">Monthly Overview</h3>
-					<div className="flex space-x-4 text-sm">
-						<div className="flex items-center space-x-2">
-							<div className="w-3 h-3 rounded-full bg-green-500"></div>
-							<span className="text-gray-600">Income</span>
-						</div>
-						<div className="flex items-center space-x-2">
-							<div className="w-3 h-3 rounded-full bg-red-500"></div>
-							<span className="text-gray-600">Expenses</span>
-						</div>
-						<div className="flex items-center space-x-2">
-							<div className="w-3 h-3 rounded-full bg-orange-500"></div>
-							<span className="text-gray-600">Subscriptions</span>
-						</div>
+					<h3 className="text-xl font-bold text-gray-800">Monthly Budget Breakdown</h3>
+					<div className="text-right">
+						<p className="text-2xl font-bold text-gray-800">${monthlyIncome.toLocaleString()}</p>
+						<p className="text-sm text-gray-500">Total Monthly Income</p>
 					</div>
 				</div>
-				<div className="h-80">
+				<div className="h-96">
 					<ResponsiveContainer width="100%" height="100%">
-						<BarChart data={barData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-							<CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+						<BarChart 
+							data={barData} 
+							layout="horizontal"
+							margin={{ top: 20, right: 30, left: 80, bottom: 20 }}
+						>
+							<CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" horizontal={false} />
 							<XAxis 
-								dataKey="name" 
-								axisLine={false}
-								tickLine={false}
-								tick={{ fontSize: 12, fill: '#64748b' }}
-							/>
-							<YAxis 
+								type="number"
 								axisLine={false}
 								tickLine={false}
 								tick={{ fontSize: 12, fill: '#64748b' }}
 								tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`}
 							/>
+							<YAxis 
+								type="category"
+								dataKey="name"
+								axisLine={false}
+								tickLine={false}
+								tick={{ fontSize: 14, fill: '#374151', fontWeight: 500 }}
+								width={70}
+							/>
 							<Tooltip content={<CustomTooltip />} />
 							<Bar 
-								dataKey="Income" 
-								fill={COLORS.income}
-								radius={[4, 4, 0, 0]}
+								dataKey="value" 
+								radius={[0, 8, 8, 0]}
 								className="hover:opacity-80 transition-opacity"
-							/>
-							<Bar 
-								dataKey="Fixed Expenses" 
-								fill={COLORS.expenses}
-								radius={[4, 4, 0, 0]}
-								className="hover:opacity-80 transition-opacity"
-							/>
-							<Bar 
-								dataKey="Subscriptions" 
-								fill={COLORS.subscriptions}
-								radius={[4, 4, 0, 0]}
-								className="hover:opacity-80 transition-opacity"
-							/>
+							>
+								{barData.map((entry, index) => (
+									<Cell key={`cell-${index}`} fill={entry.color} />
+								))}
+							</Bar>
 						</BarChart>
 					</ResponsiveContainer>
+				</div>
+				{/* Legend */}
+				<div className="flex flex-wrap justify-center gap-4 mt-4 pt-4 border-t border-gray-200">
+					{barData.map((item, index) => (
+						<div key={index} className="flex items-center space-x-2">
+							<div 
+								className="w-3 h-3 rounded-full" 
+								style={{ backgroundColor: item.color }}
+							></div>
+							<span className="text-sm text-gray-600">{item.name}</span>
+						</div>
+					))}
 				</div>
 			</div>
 
@@ -167,7 +192,7 @@ export default function SpendingCharts({
 						</ResponsiveContainer>
 					</div>
 					<div className="flex flex-col justify-center space-y-4">
-						{pieData.map((item, index) => (
+						{filteredPieData.map((item, index) => (
 							<div key={index} className="flex items-center justify-between p-3 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow">
 								<div className="flex items-center space-x-3">
 									<div 
@@ -179,7 +204,7 @@ export default function SpendingCharts({
 								<div className="text-right">
 									<p className="font-bold text-gray-800">${item.value.toLocaleString()}</p>
 									<p className="text-xs text-gray-500">
-										{((item.value / totalOutflow) * 100).toFixed(1)}%
+										{((item.value / monthlyIncome) * 100).toFixed(1)}%
 									</p>
 								</div>
 							</div>
@@ -187,8 +212,6 @@ export default function SpendingCharts({
 					</div>
 				</div>
 			</div>
-
-
 		</div>
 	);
 }
