@@ -160,8 +160,6 @@ const SavingsBins = ({
   // UI state
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [savedInputs, setSavedInputs] = useState<Record<string, string>>({});
-  const [showAddMoney, setShowAddMoney] = useState<Record<string, boolean>>({});
-  const [addMoneyInputs, setAddMoneyInputs] = useState<Record<string, string>>({});
 
   const totalAllocated = useMemo(
     () => bins.reduce((sum, bin) => sum + bin.monthlyAllocation, 0),
@@ -348,9 +346,25 @@ const SavingsBins = ({
           break;
       }
       
+      // Format the success message
+      let successMessage = `$${transferAmount.toFixed(2)} will be transferred ${frequency}`;
+      
+      if (frequency === 'custom' && customMonth && customDay) {
+        const monthNames = [
+          'January', 'February', 'March', 'April', 'May', 'June',
+          'July', 'August', 'September', 'October', 'November', 'December'
+        ];
+        const monthName = monthNames[customMonth - 1];
+        const currentYear = new Date().getFullYear();
+        const nextYear = customMonth < new Date().getMonth() + 1 ? currentYear + 1 : currentYear;
+        successMessage = `$${transferAmount.toFixed(2)} will be transferred ${monthName} ${customDay}, ${nextYear}`;
+      } else if (next) {
+        successMessage += ` starting ${next}`;
+      }
+      
       toast({ 
         title: "Transfer scheduled", 
-        description: `$${transferAmount.toFixed(2)} will be transferred ${frequency}${next ? ` starting ${next}` : ''}` 
+        description: successMessage
       });
     } catch (e) {
       console.error('Error saving schedule:', e);
@@ -402,64 +416,6 @@ const SavingsBins = ({
       toast({ 
         title: "Failed to process transfers", 
         description: e instanceof Error ? e.message : "Please try again" 
-      });
-    }
-  };
-
-  const addMoneyToBin = async (binId: string, amount: number) => {
-    if (amount <= 0) {
-      toast({ title: "Please enter a positive amount" });
-      return;
-    }
-    
-    if (amount > remainingAmount) {
-      toast({ 
-        title: "Insufficient funds", 
-        description: `You only have $${remainingAmount.toLocaleString()} available to allocate` 
-      });
-      return;
-    }
-
-    try {
-      const bin = bins.find((b) => b.id === binId);
-      if (!bin) {
-        toast({ title: "Bin not found" });
-        return;
-      }
-
-      const newAmount = bin.currentAmount + amount;
-      
-      // Update local state immediately for better UX
-      const updatedBins = bins.map((b) =>
-        b.id === binId ? { ...b, currentAmount: newAmount } : b
-      );
-      setBins(updatedBins);
-      onBinsChange(updatedBins);
-
-      // Update in database
-      const res = await fetch("/api/bins", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: binId, currentAmount: newAmount }),
-      });
-
-      if (!res.ok) {
-        throw new Error("Failed to update bin");
-      }
-
-      toast({ 
-        title: "Money added successfully", 
-        description: `$${amount.toLocaleString()} added to ${bin.name}` 
-      });
-
-      // Clear the input
-      setSavedInputs((prev) => ({ ...prev, [binId]: "" }));
-
-    } catch (e) {
-      console.error('Error adding money to bin:', e);
-      toast({ 
-        title: "Failed to add money", 
-        description: "Please try again" 
       });
     }
   };
@@ -560,15 +516,6 @@ const SavingsBins = ({
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => setShowAddMoney((prev) => ({ ...prev, [bin.id]: !prev[bin.id] }))}
-                      className="border-white/30 text-black bg-green-500 hover:bg-green-600 text-white"
-                      disabled={remainingAmount <= 0}
-                    >
-                      <Plus className="h-4 w-4 mr-1" /> Add Money
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
                       onClick={() => setExpanded((prev) => ({ ...prev, [bin.id]: !isOpen }))}
                       className="border-white/30 text-black bg-white/90 hover:bg-white"
                     >
@@ -584,45 +531,6 @@ const SavingsBins = ({
                     </Button>
                   </div>
                 </div>
-
-                {/* Add Money Input */}
-                {showAddMoney[bin.id] && (
-                  <div className="bg-white/5 rounded-lg p-3 border border-white/10">
-                    <div className="flex items-center gap-2">
-                      <Input
-                        type="number"
-                        placeholder={`Amount (max: $${remainingAmount.toLocaleString()})`}
-                        value={addMoneyInputs[bin.id] ?? ""}
-                        onChange={(e) => setAddMoneyInputs((prev) => ({ ...prev, [bin.id]: e.target.value }))}
-                        className="flex-1 bg-white/90 text-gray-900 placeholder-gray-600 border-white/30"
-                      />
-                      <Button 
-                        onClick={() => {
-                          const amount = parseFloat(addMoneyInputs[bin.id] ?? "0");
-                          if (amount > 0) {
-                            addMoneyToBin(bin.id, amount);
-                            setShowAddMoney((prev) => ({ ...prev, [bin.id]: false }));
-                            setAddMoneyInputs((prev) => ({ ...prev, [bin.id]: "" }));
-                          }
-                        }}
-                        className="bg-green-500 hover:bg-green-600 text-white"
-                        disabled={!addMoneyInputs[bin.id] || parseFloat(addMoneyInputs[bin.id] ?? "0") <= 0}
-                      >
-                        Add
-                      </Button>
-                      <Button 
-                        variant="outline"
-                        onClick={() => {
-                          setShowAddMoney((prev) => ({ ...prev, [bin.id]: false }));
-                          setAddMoneyInputs((prev) => ({ ...prev, [bin.id]: "" }));
-                        }}
-                        className="border-white/30 text-white hover:bg-white/20"
-                      >
-                        Cancel
-                      </Button>
-                    </div>
-                  </div>
-                )}
 
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm text-blue-100">
@@ -676,26 +584,12 @@ const SavingsBins = ({
                       </div>
 
                       <div className="space-y-2">
-                        <div className="text-sm font-medium text-white">Scheduled monthly transfer</div>
+                        <div className="text-sm font-medium text-white">Scheduled transfer</div>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                           <div className="space-y-2">
                             <Label className="text-sm text-blue-100">Frequency</Label>
                             <div className="space-y-2">
                               <div className="flex flex-col space-y-1">
-                                <button
-                                  type="button"
-                                  className={`px-3 py-2 text-sm rounded-md transition-colors text-left ${!bin.scheduledFrequency ? "bg-white text-blue-600" : "text-white hover:bg-white/20 border border-white/30"}`}
-                                  onClick={() =>
-                                    updateBinScheduleLocal(
-                                      bin.id,
-                                      null,
-                                      bin.customMonth ?? null,
-                                      bin.customDay ?? null,
-                                    )
-                                  }
-                                >
-                                  None
-                                </button>
                                 {frequencyOptions.map((f) => (
                                   <button
                                     key={f.value}
