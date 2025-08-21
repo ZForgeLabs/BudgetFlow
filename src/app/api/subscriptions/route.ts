@@ -7,7 +7,13 @@ const allowed = new Set(["monthly", "bi-monthly", "annually"]);
 export async function GET() {
 	try {
 		const supabase = createRouteHandlerClient({ cookies });
-		const { data: { user } } = await supabase.auth.getUser();
+		const { data: { user }, error: authError } = await supabase.auth.getUser();
+		
+		if (authError) {
+			console.log("Subscriptions GET - auth error:", authError);
+			return NextResponse.json({ error: "Authentication error", details: authError }, { status: 401 });
+		}
+		
 		if (!user) {
 			console.log("Subscriptions GET - unauthorized");
 			return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -47,7 +53,13 @@ export async function POST(req: NextRequest) {
 		}
 
 		const supabase = createRouteHandlerClient({ cookies });
-		const { data: { user } } = await supabase.auth.getUser();
+		const { data: { user }, error: authError } = await supabase.auth.getUser();
+		
+		if (authError) {
+			console.log("Subscriptions POST - auth error:", authError);
+			return NextResponse.json({ error: "Authentication error", details: authError }, { status: 401 });
+		}
+		
 		if (!user) {
 			console.log("Subscriptions POST - unauthorized");
 			return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
