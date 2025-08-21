@@ -149,7 +149,7 @@ export default function SpendingCharts({
 
 	return (
 		<div className="space-y-6">
-			{/* Modern Horizontal Bar Chart */}
+			{/* Modern Vertical Bar Chart */}
 			<div className="bg-gradient-to-br from-white to-gray-50 border border-gray-200 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300">
 				<div className="flex items-center justify-between mb-6">
 					<h3 className="text-xl font-bold text-gray-800">Monthly Budget Breakdown</h3>
@@ -162,29 +162,25 @@ export default function SpendingCharts({
 					<ResponsiveContainer width="100%" height="100%">
 						<BarChart 
 							data={barData} 
-							layout="horizontal"
-							margin={{ top: 20, right: 30, left: 80, bottom: 20 }}
+							margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
 						>
-							<CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" horizontal={false} />
+							<CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
 							<XAxis 
-								type="number"
+								dataKey="name"
+								axisLine={false}
+								tickLine={false}
+								tick={{ fontSize: 12, fill: '#64748b' }}
+							/>
+							<YAxis 
 								axisLine={false}
 								tickLine={false}
 								tick={{ fontSize: 12, fill: '#64748b' }}
 								tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`}
 							/>
-							<YAxis 
-								type="category"
-								dataKey="name"
-								axisLine={false}
-								tickLine={false}
-								tick={{ fontSize: 14, fill: '#374151', fontWeight: 500 }}
-								width={70}
-							/>
 							<Tooltip content={<CustomTooltip />} />
 							<Bar 
 								dataKey="value" 
-								radius={[0, 8, 8, 0]}
+								radius={[4, 4, 0, 0]}
 								className="hover:opacity-80 transition-opacity"
 							>
 								{barData.map((entry, index) => (
