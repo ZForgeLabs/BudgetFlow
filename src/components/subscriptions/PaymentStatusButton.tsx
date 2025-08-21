@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Check, Calendar } from "lucide-react";
 
@@ -19,30 +19,58 @@ export default function PaymentStatusButton({
 }: PaymentStatusButtonProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [isPaid, setIsPaid] = useState(false);
+  const [currentTime, setCurrentTime] = useState(new Date());
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Check if payment is due (next billing date is today or in the past)
   const isPaymentDue = () => {
-    const today = new Date();
     const billingDate = new Date(nextBillingDate);
-    return billingDate <= today;
+    return billingDate <= currentTime;
   };
 
   // Check if payment is overdue (more than 7 days past due)
   const isOverdue = () => {
-    const today = new Date();
     const billingDate = new Date(nextBillingDate);
-    const daysDiff = Math.floor((today.getTime() - billingDate.getTime()) / (1000 * 60 * 60 * 24));
+    const daysDiff = Math.floor((currentTime.getTime() - billingDate.getTime()) / (1000 * 60 * 60 * 24));
     return daysDiff > 7;
   };
 
   // Check if recently paid (within last 30 days)
   const isRecentlyPaid = () => {
     if (!lastPaidDate) return false;
-    const today = new Date();
     const paidDate = new Date(lastPaidDate);
-    const daysDiff = Math.floor((today.getTime() - paidDate.getTime()) / (1000 * 60 * 60 * 24));
+    const daysDiff = Math.floor((currentTime.getTime() - paidDate.getTime()) / (1000 * 60 * 60 * 24));
     return daysDiff <= 30 && !isPaymentDue();
   };
+
+  // Set up automatic timer to check payment status
+  useEffect(() => {
+    // Update time every minute to check for date changes
+    const updateTime = () => {
+      setCurrentTime(new Date());
+    };
+
+    // Initial update
+    updateTime();
+
+    // Set up interval to check every minute
+    intervalRef.current = setInterval(updateTime, 60000); // 60 seconds
+
+    // Cleanup on unmount
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+    };
+  }, []);
+
+  // Force refresh when payment status changes
+  useEffect(() => {
+    // If payment is now due and we were previously showing "Paid", refresh the data
+    if (isPaymentDue() && isRecentlyPaid()) {
+      onPaymentUpdate();
+    }
+  }, [currentTime, isPaymentDue, isRecentlyPaid, onPaymentUpdate]);
 
   const handleMarkAsPaid = async () => {
     setIsLoading(true);
@@ -118,19 +146,26 @@ export default function PaymentStatusButton({
   const buttonState = getButtonState();
 
   return (
-    <Button
-      variant={buttonState.variant}
-      size="sm"
-      disabled={isLoading || isRecentlyPaid()}
-      onClick={handleMarkAsPaid}
-      className={buttonState.className}
-    >
-      {isLoading ? (
-        <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-      ) : (
-        buttonState.icon
+    <div className="flex items-center gap-2">
+      <Button
+        variant={buttonState.variant}
+        size="sm"
+        disabled={isLoading || isRecentlyPaid()}
+        onClick={handleMarkAsPaid}
+        className={buttonState.className}
+      >
+        {isLoading ? (
+          <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+        ) : (
+          buttonState.icon
+        )}
+        <span className="ml-2">{buttonState.text}</span>
+      </Button>
+      {isPaymentDue() && isRecentlyPaid() && (
+        <div className="text-xs text-orange-600 bg-orange-50 px-2 py-1 rounded">
+          Due
+        </div>
       )}
-      <span className="ml-2">{buttonState.text}</span>
-    </Button>
+    </div>
   );
 }
