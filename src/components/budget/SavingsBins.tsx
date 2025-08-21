@@ -365,7 +365,7 @@ const SavingsBins = ({
                       variant="outline"
                       size="sm"
                       onClick={() => setExpanded((prev) => ({ ...prev, [bin.id]: !isOpen }))}
-                      className="border-white/30 text-white hover:bg-white/20"
+                      className="border-white/30 text-black bg-white/90 hover:bg-white"
                     >
                       <Settings2 className="h-4 w-4 mr-1" /> {isOpen ? "Hide" : "Manage"}
                     </Button>
@@ -373,7 +373,7 @@ const SavingsBins = ({
                       variant="outline"
                       size="sm"
                       onClick={() => removeBin(bin.id)}
-                      className="border-white/30 text-white hover:bg-white/20"
+                      className="border-white/30 text-black bg-white/90 hover:bg-white"
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -385,7 +385,7 @@ const SavingsBins = ({
                     <span>Goal progress</span>
                     <span>{goalPct.toFixed(1)}%</span>
                   </div>
-                  <Progress value={goalPct} className="h-2" indicatorClassName="bg-blue-500" />
+                  <Progress value={goalPct} className="h-2" indicatorClassName="bg-green-500" />
                 </div>
 
                 <div className="space-y-2">
@@ -393,7 +393,7 @@ const SavingsBins = ({
                     <span>Monthly allocation</span>
                     <span>${bin.monthlyAllocation.toLocaleString()}</span>
                   </div>
-                  <Progress value={allocationPct} className="h-2" indicatorClassName="bg-blue-500" />
+                  <Progress value={allocationPct} className="h-2" indicatorClassName="bg-yellow-500" />
                 </div>
 
                 {isOpen && (

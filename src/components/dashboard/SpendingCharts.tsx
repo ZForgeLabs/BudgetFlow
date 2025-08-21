@@ -188,36 +188,7 @@ export default function SpendingCharts({
 				</div>
 			</div>
 
-			{/* Summary Cards */}
-			<div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-				<div className="bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl p-4 shadow-lg">
-					<div className="flex items-center justify-between">
-						<div>
-							<p className="text-sm opacity-90">Monthly Income</p>
-							<p className="text-2xl font-bold">${monthlyIncome.toLocaleString()}</p>
-						</div>
-						<div className="text-3xl">💰</div>
-					</div>
-				</div>
-				<div className="bg-gradient-to-r from-red-500 to-red-600 text-white rounded-xl p-4 shadow-lg">
-					<div className="flex items-center justify-between">
-						<div>
-							<p className="text-sm opacity-90">Total Outflow</p>
-							<p className="text-2xl font-bold">${totalOutflow.toLocaleString()}</p>
-						</div>
-						<div className="text-3xl">📊</div>
-					</div>
-				</div>
-				<div className="bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-xl p-4 shadow-lg">
-					<div className="flex items-center justify-between">
-						<div>
-							<p className="text-sm opacity-90">Remaining</p>
-							<p className="text-2xl font-bold">${remaining.toLocaleString()}</p>
-						</div>
-						<div className="text-3xl">💎</div>
-					</div>
-				</div>
-			</div>
+
 		</div>
 	);
 }

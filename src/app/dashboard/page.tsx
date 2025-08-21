@@ -314,7 +314,7 @@ export default function DashboardPage() {
                       <Button
                         variant="outline"
                         size="sm"
-                        className="border-white/30 text-white hover:bg-white/20"
+                        className="border-white/30 text-black bg-white/90 hover:bg-white"
                         onClick={async () => {
                           await fetch(`/api/subscriptions?id=${s.id}`, { method: "DELETE" });
                           setSubs((prev) => prev.filter((x) => x.id !== s.id));
