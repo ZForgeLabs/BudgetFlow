@@ -208,18 +208,29 @@ const SavingsBins = ({
   };
 
   const updateBinAllocation = async (id: string, allocation: number) => {
+    console.log('Updating bin allocation:', { id, allocation });
     const updatedBins = bins.map((bin) =>
       bin.id === id ? { ...bin, monthlyAllocation: allocation } : bin,
     );
     setBins(updatedBins);
     onBinsChange(updatedBins);
     try {
-      await fetch("/api/bins", {
+      const response = await fetch("/api/bins", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id, monthlyAllocation: allocation }),
       });
-    } catch (e) {}
+      if (!response.ok) {
+        const errorData = await response.text();
+        console.error('Failed to update allocation:', errorData);
+        toast({ title: "Failed to save allocation", description: "Please try again" });
+      } else {
+        console.log('Allocation updated successfully');
+      }
+    } catch (e) {
+      console.error('Error updating allocation:', e);
+      toast({ title: "Failed to save allocation", description: "Please try again" });
+    }
   };
 
   const addToSavedAmount = async (id: string) => {
@@ -269,6 +280,8 @@ const SavingsBins = ({
     customMonth: number | null,
     customDay: number | null,
   ) => {
+    console.log('Submitting schedule:', { id, frequency, customMonth, customDay });
+    
     if (!frequency) {
       toast({ title: "Select a frequency" });
       return;
@@ -277,26 +290,50 @@ const SavingsBins = ({
       toast({ title: "Select month and day for custom time" });
       return;
     }
+    
     try {
       const bin = bins.find((b) => b.id === id);
+      console.log('Found bin for schedule:', bin);
+      
+      if (!bin) {
+        toast({ title: "Bin not found" });
+        return;
+      }
+      
+      const scheduleData = {
+        binId: id,
+        name: bin.name,
+        frequency,
+        customMonth,
+        customDay,
+        monthlyAllocation: bin.monthlyAllocation ?? 0,
+      };
+      
+      console.log('Sending schedule data:', scheduleData);
+      
       const res = await fetch("/api/schedules", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          binId: id,
-          name: bin?.name,
-          frequency,
-          customMonth,
-          customDay,
-          monthlyAllocation: bin?.monthlyAllocation ?? 0,
-        }),
+        body: JSON.stringify(scheduleData),
       });
-      if (!res.ok) throw new Error("Request failed");
+      
+      console.log('Schedule response status:', res.status);
+      
+      if (!res.ok) {
+        const errorText = await res.text();
+        console.error('Schedule save failed:', errorText);
+        throw new Error(`Request failed: ${res.status} - ${errorText}`);
+      }
+      
+      const responseData = await res.json();
+      console.log('Schedule save response:', responseData);
+      
       const next = computeNextTransferDate(frequency, customMonth, customDay);
       updateBinScheduleLocal(id, frequency, customMonth, customDay);
       toast({ title: "Transfer scheduled", description: next ? `Next transfer on ${next}` : undefined });
     } catch (e) {
-      toast({ title: "Failed to save schedule" });
+      console.error('Error saving schedule:', e);
+      toast({ title: "Failed to save schedule", description: e instanceof Error ? e.message : "Please try again" });
     }
   };
 
