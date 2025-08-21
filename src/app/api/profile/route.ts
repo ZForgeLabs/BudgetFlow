@@ -17,11 +17,13 @@ export async function GET() {
 		if (error && error.code !== "PGRST116") throw error; // no rows
 		
 		// Get user's name from auth user data
+		const firstName = user.user_metadata?.first_name || user.user_metadata?.name || user.email?.split('@')[0] || 'User';
 		const fullName = user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split('@')[0] || 'User';
 		
 		return NextResponse.json({ 
 			monthlyIncome: data?.monthly_income ?? null,
-			fullName: fullName
+			fullName: fullName,
+			firstName: firstName
 		});
 	} catch {
 		return NextResponse.json({ error: "Failed to fetch" }, { status: 500 });

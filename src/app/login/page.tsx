@@ -1,15 +1,15 @@
 "use client";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Auth } from "@supabase/auth-ui-react";
-import { ThemeSupa } from "@supabase/auth-ui-shared";
 import { supabase } from "@/lib/supabase/client";
-import { Button } from "@/components/ui/button";
 import { Icons } from "@/components/ui/icons";
+import CustomLoginForm from "@/components/auth/CustomLoginForm";
+import CustomSignupForm from "@/components/auth/CustomSignupForm";
 
 export default function LoginPage() {
   const router = useRouter();
-  const redirectTo = typeof window !== "undefined" ? `${window.location.origin}/auth/callback` : undefined;
+  const [isSignup, setIsSignup] = useState(false);
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -46,8 +46,6 @@ export default function LoginPage() {
             and subscriptions—then visualize it instantly. Sign in to access your personal dashboard.
           </p>
 
-          {/* CTA buttons removed as requested */}
-
           <div className="mt-10 grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm text-gray-600">
             <div className="rounded-lg border bg-white/60 p-4">
               <div className="font-semibold text-gray-900">Per‑user data</div>
@@ -68,19 +66,52 @@ export default function LoginPage() {
           <div className="w-full max-w-md mx-auto bg-white/80 backdrop-blur rounded-xl border shadow p-6">
             <div className="flex items-center gap-2">
               <Icons.logo className="h-6 w-6 text-blue-600" />
-              <h2 className="text-xl font-semibold text-gray-900">Sign in</h2>
+              <h2 className="text-xl font-semibold text-gray-900">
+                {isSignup ? "Create Account" : "Sign In"}
+              </h2>
             </div>
             <p className="text-sm text-gray-600 mt-1">
-              Use email/password. You’ll be redirected to your dashboard.
+              {isSignup 
+                ? "Create your account to start budgeting" 
+                : "Sign in to access your dashboard"
+              }
             </p>
-            <div className="mt-4">
-              <Auth
-                supabaseClient={supabase}
-                appearance={{ theme: ThemeSupa }}
-                providers={[]}
-                redirectTo={redirectTo}
-              />
-            </div>
+            
+            {showSuccessMessage ? (
+              <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+                <div className="flex items-center gap-2">
+                  <Icons.check className="h-5 w-5 text-green-600" />
+                  <div>
+                    <h3 className="font-medium text-green-800">
+                      {isSignup ? "Account created successfully!" : "Signed in successfully!"}
+                    </h3>
+                    <p className="text-sm text-green-600">
+                      {isSignup 
+                        ? "Please check your email to verify your account." 
+                        : "Redirecting to your dashboard..."
+                      }
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="mt-4">
+                {isSignup ? (
+                  <CustomSignupForm
+                    onSuccess={() => setShowSuccessMessage(true)}
+                    onSwitchToLogin={() => setIsSignup(false)}
+                  />
+                ) : (
+                  <CustomLoginForm
+                    onSuccess={() => {
+                      setShowSuccessMessage(true);
+                      setTimeout(() => router.replace("/dashboard"), 2000);
+                    }}
+                    onSwitchToSignup={() => setIsSignup(true)}
+                  />
+                )}
+              </div>
+            )}
           </div>
         </section>
       </div>

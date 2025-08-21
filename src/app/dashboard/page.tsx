@@ -55,9 +55,9 @@ export default function DashboardPage() {
       // profile income and name
       const resProfile = await fetch("/api/profile", { cache: "no-store" });
       if (resProfile.ok) {
-        const { monthlyIncome: mi, fullName } = await resProfile.json();
+        const { monthlyIncome: mi, firstName } = await resProfile.json();
         if (typeof mi === "number" && !Number.isNaN(mi)) setMonthlyIncome(mi);
-        if (fullName) setUserName(fullName);
+        if (firstName) setUserName(firstName);
       }
       // expenses
       const resExp = await fetch("/api/expenses", { cache: "no-store" });
