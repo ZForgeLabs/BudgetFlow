@@ -26,20 +26,40 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
+    console.log('Received schedule request body:', body);
+    
     const { binId, name, frequency, customMonth, customDay, monthlyAllocation } = body ?? {};
-    if (!binId || !frequency) {
-      return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+    
+    // Validation
+    if (!binId) {
+      return NextResponse.json({ error: "Missing binId" }, { status: 400 });
+    }
+    if (!frequency) {
+      return NextResponse.json({ error: "Missing frequency" }, { status: 400 });
+    }
+    if (!name) {
+      return NextResponse.json({ error: "Missing name" }, { status: 400 });
     }
     if (frequency === "custom" && (!customMonth || !customDay)) {
       return NextResponse.json({ error: "Custom schedule requires month and day" }, { status: 400 });
     }
     if (!allowed.has(frequency)) {
-      return NextResponse.json({ error: "Invalid frequency" }, { status: 400 });
+      return NextResponse.json({ error: `Invalid frequency: ${frequency}` }, { status: 400 });
     }
 
     const supabase = createRouteHandlerClient({ cookies });
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+    console.log('Inserting schedule with data:', {
+      user_id: user.id,
+      bin_id: binId,
+      name,
+      frequency,
+      custom_month: customMonth,
+      custom_day: customDay,
+      monthly_allocation: monthlyAllocation,
+    });
 
     const { data, error } = await supabase
       .from("schedules")
@@ -55,10 +75,19 @@ export async function POST(req: NextRequest) {
       .select("id")
       .single();
 
-    if (error) throw error;
+    if (error) {
+      console.error('Supabase error:', error);
+      return NextResponse.json({ error: `Database error: ${error.message}` }, { status: 400 });
+    }
+    
+    console.log('Schedule created successfully:', data);
     return NextResponse.json({ ok: true, id: data?.id ?? null });
-  } catch {
-    return NextResponse.json({ error: "Invalid request" }, { status: 400 });
+  } catch (error) {
+    console.error('Unexpected error in POST /api/schedules:', error);
+    return NextResponse.json({ 
+      error: "Invalid request", 
+      details: error instanceof Error ? error.message : "Unknown error" 
+    }, { status: 400 });
   }
 }
 
