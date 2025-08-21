@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { Check, Calendar } from "lucide-react";
+import { Check, Calendar, RotateCcw } from "lucide-react";
 
 interface PaymentStatusButtonProps {
   subscriptionId: string;
@@ -19,6 +19,7 @@ export default function PaymentStatusButton({
 }: PaymentStatusButtonProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [isPaid, setIsPaid] = useState(false);
+  const [isUndoing, setIsUndoing] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -97,6 +98,30 @@ export default function PaymentStatusButton({
     }
   };
 
+  const handleUndoPayment = async () => {
+    // Simple confirmation dialog
+    if (!confirm("Are you sure you want to undo the last payment? This will reset the billing date.")) {
+      return;
+    }
+    
+    setIsUndoing(true);
+    try {
+      const res = await fetch("/api/subscriptions/undo-payment", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ subscriptionId }),
+      });
+      
+      if (res.ok) {
+        onPaymentUpdate();
+      }
+    } catch (error) {
+      console.error("Error undoing payment:", error);
+    } finally {
+      setIsUndoing(false);
+    }
+  };
+
   // Determine button state and styling
   const getButtonState = () => {
     if (isPaid) {
@@ -161,6 +186,25 @@ export default function PaymentStatusButton({
         )}
         <span className="ml-2">{buttonState.text}</span>
       </Button>
+      
+      {/* Undo button - only show when recently paid */}
+      {isRecentlyPaid() && !isPaymentDue() && (
+        <Button
+          variant="outline"
+          size="sm"
+          disabled={isUndoing}
+          onClick={handleUndoPayment}
+          className="border-gray-300 text-gray-600 hover:bg-gray-50"
+        >
+          {isUndoing ? (
+            <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+          ) : (
+            <RotateCcw className="h-4 w-4" />
+          )}
+          <span className="ml-2">Undo</span>
+        </Button>
+      )}
+      
       {isPaymentDue() && isRecentlyPaid() && (
         <div className="text-xs text-orange-600 bg-orange-50 px-2 py-1 rounded">
           Due
