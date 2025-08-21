@@ -22,7 +22,7 @@ export async function GET() {
 		console.log("Subscriptions GET - fetching for user_id:", user.id);
 		const { data, error } = await supabase
 			.from("subscriptions")
-			.select("id, name, amount, occurrence, start_date, created_at")
+			.select("id, name, amount, occurrence, start_date, next_billing_date, created_at")
 			.eq("user_id", user.id)
 			.order("created_at", { ascending: false });
 
@@ -65,7 +65,21 @@ export async function POST(req: NextRequest) {
 			return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 		}
 
+		// Calculate next billing date based on occurrence
+		const startDateObj = new Date(startDate);
+		let nextBillingDate = new Date(startDateObj);
+		
+		if (occurrence === "monthly") {
+			nextBillingDate.setMonth(nextBillingDate.getMonth() + 1);
+		} else if (occurrence === "bi-monthly") {
+			nextBillingDate.setMonth(nextBillingDate.getMonth() + 2);
+		} else if (occurrence === "annually") {
+			nextBillingDate.setFullYear(nextBillingDate.getFullYear() + 1);
+		}
+		
 		console.log("Subscriptions POST - inserting with user_id:", user.id);
+		console.log("Subscriptions POST - calculated next billing date:", nextBillingDate.toISOString().split('T')[0]);
+		
 		const { data, error } = await supabase
 			.from("subscriptions")
 			.insert({
@@ -74,6 +88,7 @@ export async function POST(req: NextRequest) {
 				amount,
 				occurrence,
 				start_date: startDate,
+				next_billing_date: nextBillingDate.toISOString().split('T')[0],
 			})
 			.select("id")
 			.single();

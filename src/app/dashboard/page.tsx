@@ -243,17 +243,43 @@ export default function DashboardPage() {
               subs.map((s) => (
                 <li key={s.id} className="flex items-center justify-between">
                   <span>
-                    {s.name} — ${Number(s.amount).toFixed(2)} — Started: {new Date(s.start_date).toLocaleDateString()}
+                    {s.name} — ${Number(s.amount).toFixed(2)} — Started: {new Date(s.start_date).toLocaleDateString()} — Next: {s.next_billing_date ? new Date(s.next_billing_date).toLocaleDateString() : 'N/A'}
                   </span>
-                  <Button
-                    variant="secondary"
-                    onClick={async () => {
-                      await fetch(`/api/subscriptions?id=${s.id}`, { method: "DELETE" });
-                      setSubs((prev) => prev.filter((x) => x.id !== s.id));
-                    }}
-                  >
-                    Delete
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={async () => {
+                        try {
+                          const res = await fetch("/api/subscriptions/update-billing", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ subscriptionId: s.id }),
+                          });
+                          if (res.ok) {
+                            // Refresh the subscriptions list
+                            const r2 = await fetch("/api/subscriptions", { cache: "no-store" });
+                            const { items } = await r2.json();
+                            setSubs(items);
+                          }
+                        } catch (error) {
+                          console.error("Error updating billing date:", error);
+                        }
+                      }}
+                    >
+                      Mark Paid
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={async () => {
+                        await fetch(`/api/subscriptions?id=${s.id}`, { method: "DELETE" });
+                        setSubs((prev) => prev.filter((x) => x.id !== s.id));
+                      }}
+                    >
+                      Delete
+                    </Button>
+                  </div>
                 </li>
               ))
             )}
