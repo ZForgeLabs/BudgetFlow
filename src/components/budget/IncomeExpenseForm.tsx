@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, DollarSign, TrendingUp, TrendingDown } from "lucide-react";
 
 interface Expense {
   id: string;
@@ -147,83 +147,109 @@ const IncomeExpenseForm = ({
   };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      {/* Monthly Income */}
-      <Card className="bg-white">
-        <CardHeader>
-          <CardTitle className="text-lg font-semibold text-gray-900">
-            Monthly Income
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-2">
-            <Label htmlFor="income">Total Monthly Income</Label>
-            {!isEditingIncome ? (
-              <div className="flex items-center justify-between">
-                <div className="text-2xl font-bold">${monthlyIncome.toLocaleString()}</div>
-                <Button type="button" variant="outline" onClick={startEditingIncome}>
-                  Change Monthly Income
-                </Button>
-              </div>
-            ) : (
-              <div className="flex items-center gap-2">
+    <div className="space-y-6">
+      {/* Monthly Income Section */}
+      <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-2xl p-6 text-white shadow-lg hover:shadow-xl transition-all duration-300">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center space-x-3">
+            <div className="p-3 rounded-xl bg-white/20 backdrop-blur-sm">
+              <TrendingUp className="h-6 w-6" />
+            </div>
+            <div>
+              <h3 className="text-2xl font-bold">Monthly Income</h3>
+              <p className="text-green-100">Set your total monthly earnings</p>
+            </div>
+          </div>
+          {!isEditingIncome && (
+            <Button 
+              variant="outline" 
+              onClick={startEditingIncome}
+              className="border-white/30 text-white hover:bg-white/20"
+            >
+              Edit Income
+            </Button>
+          )}
+        </div>
+
+        {!isEditingIncome ? (
+          <div className="text-center">
+            <div className="text-4xl font-bold mb-2">${monthlyIncome.toLocaleString()}</div>
+            <p className="text-green-100">per month</p>
+          </div>
+        ) : (
+          <div className="bg-white/10 rounded-xl p-4 backdrop-blur-sm">
+            <div className="flex items-center gap-3">
+              <div className="relative flex-1">
+                <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-600">$</span>
                 <Input
                   id="income"
                   type="number"
                   placeholder="5000"
                   value={income}
                   onChange={(e) => handleIncomeChange(e.target.value)}
-                  className="text-lg font-medium"
+                  className="text-lg font-medium pl-8 bg-white text-gray-900"
                 />
-                <Button type="button" onClick={saveIncome} className="bg-blue-600 hover:bg-blue-700 text-white">
-                  Save
-                </Button>
-                <Button type="button" variant="outline" onClick={cancelEditingIncome}>
-                  Cancel
-                </Button>
               </div>
-            )}
+              <Button 
+                type="button" 
+                onClick={saveIncome} 
+                className="bg-white text-green-600 hover:bg-green-50"
+              >
+                Save
+              </Button>
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={cancelEditingIncome}
+                className="border-white/30 text-white hover:bg-white/20"
+              >
+                Cancel
+              </Button>
+            </div>
           </div>
-        </CardContent>
-      </Card>
+        )}
+      </div>
 
-      {/* Fixed Expenses */}
-      <Card className="bg-white">
-        <CardHeader>
-          <CardTitle className="text-lg font-semibold text-gray-900">
-            Fixed Monthly Expenses
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
+      {/* Fixed Expenses Section */}
+      <div className="bg-gradient-to-br from-red-500 to-red-600 rounded-2xl p-6 text-white shadow-lg hover:shadow-xl transition-all duration-300">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center space-x-3">
+            <div className="p-3 rounded-xl bg-white/20 backdrop-blur-sm">
+              <TrendingDown className="h-6 w-6" />
+            </div>
+            <div>
+              <h3 className="text-2xl font-bold">Fixed Monthly Expenses</h3>
+              <p className="text-red-100">Manage your recurring expenses</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="space-y-4">
           {/* Existing Expenses */}
           <div className="space-y-3">
             {expenses.map((expense) => (
-              <div key={expense.id} className="flex items-center gap-2">
+              <div key={expense.id} className="flex items-center gap-3 bg-white/10 rounded-xl p-3 backdrop-blur-sm">
                 <Input
                   placeholder="Expense name"
                   value={expense.name}
-                  onChange={(e) =>
-                    updateExpense(expense.id, "name", e.target.value)
-                  }
-                  className="flex-1"
+                  onChange={(e) => updateExpense(expense.id, "name", e.target.value)}
+                  className="flex-1 bg-white text-gray-900"
                 />
-                <div className="relative w-24">
-                  <span className="pointer-events-none absolute left-2 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+                <div className="relative w-28">
+                  <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-600">$</span>
                   <Input
                     type="number"
                     placeholder="0"
                     value={expense.amount.toString()}
-                    onChange={(e) =>
-                      updateExpense(expense.id, "amount", e.target.value)
-                    }
-                    className="w-24 pl-5"
+                    onChange={(e) => updateExpense(expense.id, "amount", e.target.value)}
+                    className="w-28 pl-8 bg-white text-gray-900"
                   />
                 </div>
                 <Button
                   variant="outline"
                   size="icon"
                   onClick={() => removeExpense(expense.id)}
-                  className="flex-shrink-0"
+                  className="flex-shrink-0 border-white/30 text-white hover:bg-white/20"
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>
@@ -232,45 +258,45 @@ const IncomeExpenseForm = ({
           </div>
 
           {/* Add New Expense */}
-          <div className="border-t pt-4">
-          <div className="flex items-center gap-2">
-          <Input
-            placeholder="New expense name"
-            value={newExpenseName}
-            onChange={(e) => setNewExpenseName(e.target.value)}
-            className="flex-1"
-          />
-          <div className="relative w-24">
-            <span className="pointer-events-none absolute left-2 top-1/2 -translate-y-1/2 text-gray-500">$</span>
-            <Input
-              type="number"
-              placeholder="0"
-              value={newExpenseAmount}
-              onChange={(e) => setNewExpenseAmount(e.target.value)}
-              className="w-24 pl-5"
-            />
-          </div>
-          <Button
-            onClick={addExpense}
-            size="icon"
-            className="flex-shrink-0"
-          >
-            <Plus className="h-4 w-4" />
-          </Button>
-        </div>
+          <div className="border-t border-white/20 pt-4">
+            <div className="flex items-center gap-3">
+              <Input
+                placeholder="New expense name"
+                value={newExpenseName}
+                onChange={(e) => setNewExpenseName(e.target.value)}
+                className="flex-1 bg-white text-gray-900"
+              />
+              <div className="relative w-28">
+                <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-600">$</span>
+                <Input
+                  type="number"
+                  placeholder="0"
+                  value={newExpenseAmount}
+                  onChange={(e) => setNewExpenseAmount(e.target.value)}
+                  className="w-28 pl-8 bg-white text-gray-900"
+                />
+              </div>
+              <Button
+                onClick={addExpense}
+                size="icon"
+                className="flex-shrink-0 bg-white text-red-600 hover:bg-red-50"
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
 
           {/* Total Section */}
-          <div className="border-t pt-4">
-            <div className="flex items-center justify-between">
-              <span className="font-semibold text-gray-900">Total Fixed Monthly Expenses:</span>
-              <span className="text-xl font-bold text-gray-900">
+          <div className="border-t border-white/20 pt-4">
+            <div className="flex items-center justify-between bg-white/10 rounded-xl p-4 backdrop-blur-sm">
+              <span className="font-semibold text-lg">Total Fixed Monthly Expenses:</span>
+              <span className="text-2xl font-bold">
                 ${expenses.reduce((sum, expense) => sum + expense.amount, 0).toLocaleString()}
               </span>
             </div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 };

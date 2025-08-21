@@ -148,17 +148,17 @@ export default function DashboardPage() {
           remainingBalance={remainingBalance - totalSubscriptionsMonthly}
         />
 
-        <SpendingCharts
-          monthlyIncome={monthlyIncome}
-          totalFixedExpenses={totalExpenses}
-          totalSubscriptionsMonthly={totalSubscriptionsMonthly}
-        />
-
         <IncomeExpenseForm
           monthlyIncome={monthlyIncome}
           fixedExpenses={fixedExpenses}
           onIncomeChange={setMonthlyIncome}
           onExpensesChange={setFixedExpenses}
+        />
+
+        <SpendingCharts
+          monthlyIncome={monthlyIncome}
+          totalFixedExpenses={totalExpenses}
+          totalSubscriptionsMonthly={totalSubscriptionsMonthly}
         />
 
         <SavingsBins
