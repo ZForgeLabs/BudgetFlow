@@ -1,10 +1,11 @@
 import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import {
-  ArrowDownIcon,
-  ArrowUpIcon,
+  TrendingUpIcon,
+  TrendingDownIcon,
   DollarSignIcon,
   PiggyBankIcon,
+  CreditCardIcon,
 } from "lucide-react";
 
 interface FinancialSummaryProps {
@@ -26,114 +27,176 @@ const FinancialSummary = ({
   const afterExpensesBalance = monthlyIncome - totalExpenses;
   const afterSubscriptionsBalance = afterExpensesBalance - totalSubscriptions;
 
+  // Calculate percentages for visual indicators
+  const totalOutflow = totalExpenses + totalSubscriptions;
+  const outflowPercentage = (totalOutflow / monthlyIncome) * 100;
+  const savingsPercentage = (totalSavings / monthlyIncome) * 100;
+
   return (
-    <Card className="w-full bg-white shadow-sm">
-      <CardContent className="p-6">
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="w-full space-y-6">
+      {/* Main Financial Overview */}
+      <div className="bg-gradient-to-br from-white via-gray-50 to-white border border-gray-200 rounded-3xl p-8 shadow-xl">
+        <div className="text-center mb-8">
+          <h2 className="text-3xl font-bold text-gray-800 mb-2">Financial Overview</h2>
+          <p className="text-gray-600">Your monthly budget breakdown</p>
+        </div>
+
+        {/* Main Cards Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
           {/* Monthly Income */}
-          <div className="flex items-center space-x-4">
-            <div className="p-3 rounded-full bg-green-100">
-              <ArrowDownIcon className="h-6 w-6 text-green-600" />
+          <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-2xl p-6 text-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+            <div className="flex items-center justify-between mb-4">
+              <div className="p-3 rounded-xl bg-white/20 backdrop-blur-sm">
+                <TrendingUpIcon className="h-6 w-6" />
+              </div>
+              <div className="text-right">
+                <div className="text-sm opacity-90">Income</div>
+                <div className="text-xs opacity-75">Monthly</div>
+              </div>
             </div>
-            <div>
-              <p className="text-sm font-medium text-gray-500">
-                Monthly Income
-              </p>
-              <h3 className="text-xl lg:text-2xl font-bold text-gray-900">
-                ${monthlyIncome.toLocaleString()}
-              </h3>
-            </div>
+            <div className="text-2xl font-bold mb-2">${monthlyIncome.toLocaleString()}</div>
+            <div className="text-xs opacity-75">Total monthly earnings</div>
           </div>
 
           {/* Fixed Expenses */}
-          <div className="flex items-center space-x-4">
-            <div className="p-3 rounded-full bg-red-100">
-              <ArrowUpIcon className="h-6 w-6 text-red-600" />
+          <div className="bg-gradient-to-br from-red-500 to-red-600 rounded-2xl p-6 text-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+            <div className="flex items-center justify-between mb-4">
+              <div className="p-3 rounded-xl bg-white/20 backdrop-blur-sm">
+                <TrendingDownIcon className="h-6 w-6" />
+              </div>
+              <div className="text-right">
+                <div className="text-sm opacity-90">Expenses</div>
+                <div className="text-xs opacity-75">Fixed</div>
+              </div>
             </div>
-            <div>
-              <p className="text-sm font-medium text-gray-500">
-                Fixed Expenses
-              </p>
-              <h3 className="text-xl lg:text-2xl font-bold text-gray-900">
-                ${totalExpenses.toLocaleString()}
-              </h3>
-            </div>
+            <div className="text-2xl font-bold mb-2">${totalExpenses.toLocaleString()}</div>
+            <div className="text-xs opacity-75">{((totalExpenses / monthlyIncome) * 100).toFixed(1)}% of income</div>
           </div>
 
           {/* Subscriptions */}
-          <div className="flex items-center space-x-4">
-            <div className="p-3 rounded-full bg-orange-100">
-              <DollarSignIcon className="h-6 w-6 text-orange-600" />
+          <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl p-6 text-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+            <div className="flex items-center justify-between mb-4">
+              <div className="p-3 rounded-xl bg-white/20 backdrop-blur-sm">
+                <CreditCardIcon className="h-6 w-6" />
+              </div>
+              <div className="text-right">
+                <div className="text-sm opacity-90">Subscriptions</div>
+                <div className="text-xs opacity-75">Monthly</div>
+              </div>
             </div>
-            <div>
-              <p className="text-sm font-medium text-gray-500">
-                Subscriptions
-              </p>
-              <h3 className="text-xl lg:text-2xl font-bold text-gray-900">
-                ${totalSubscriptions.toLocaleString()}
-              </h3>
-            </div>
+            <div className="text-2xl font-bold mb-2">${totalSubscriptions.toLocaleString()}</div>
+            <div className="text-xs opacity-75">{((totalSubscriptions / monthlyIncome) * 100).toFixed(1)}% of income</div>
           </div>
 
           {/* Total Savings */}
-          <div className="flex items-center space-x-4">
-            <div className="p-3 rounded-full bg-blue-100">
-              <PiggyBankIcon className="h-6 w-6 text-blue-600" />
+          <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-6 text-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+            <div className="flex items-center justify-between mb-4">
+              <div className="p-3 rounded-xl bg-white/20 backdrop-blur-sm">
+                <PiggyBankIcon className="h-6 w-6" />
+              </div>
+              <div className="text-right">
+                <div className="text-sm opacity-90">Savings</div>
+                <div className="text-xs opacity-75">Total</div>
+              </div>
             </div>
-            <div>
-              <p className="text-sm font-medium text-gray-500">Total Savings</p>
-              <h3 className="text-xl lg:text-2xl font-bold text-gray-900">
-                ${totalSavings.toLocaleString()}
-              </h3>
-            </div>
+            <div className="text-2xl font-bold mb-2">${totalSavings.toLocaleString()}</div>
+            <div className="text-xs opacity-75">{savingsPercentage.toFixed(1)}% of income</div>
           </div>
 
-          {/* Remaining Balance */}
-          <div className="flex items-center space-x-4">
-            <div
-              className={`p-3 rounded-full ${isBalancePositive ? "bg-emerald-100" : "bg-red-100"}`}
-            >
-              <DollarSignIcon
-                className={`h-6 w-6 ${isBalancePositive ? "text-emerald-600" : "text-red-600"}`}
-              />
+          {/* Leftover */}
+          <div className={`bg-gradient-to-br ${isBalancePositive ? 'from-emerald-500 to-emerald-600' : 'from-red-500 to-red-600'} rounded-2xl p-6 text-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1`}>
+            <div className="flex items-center justify-between mb-4">
+              <div className="p-3 rounded-xl bg-white/20 backdrop-blur-sm">
+                <DollarSignIcon className="h-6 w-6" />
+              </div>
+              <div className="text-right">
+                <div className="text-sm opacity-90">Leftover</div>
+                <div className="text-xs opacity-75">{isBalancePositive ? 'Available' : 'Over Budget'}</div>
+              </div>
             </div>
-            <div>
-              <p className="text-sm font-medium text-gray-500">Leftover</p>
-              <h3
-                className={`text-xl lg:text-2xl font-bold ${isBalancePositive ? "text-emerald-600" : "text-red-600"}`}
-              >
-                ${Math.abs(remainingBalance).toLocaleString()}
-                {!isBalancePositive && " (Over)"}
-              </h3>
+            <div className="text-2xl font-bold mb-2">
+              ${Math.abs(remainingBalance).toLocaleString()}
+              {!isBalancePositive && " (Over)"}
+            </div>
+            <div className="text-xs opacity-75">
+              {isBalancePositive 
+                ? `${((remainingBalance / monthlyIncome) * 100).toFixed(1)}% of income`
+                : 'Exceeds monthly budget'
+              }
             </div>
           </div>
         </div>
 
-        {/* Additional Info */}
-        <div className="mt-4 pt-4 border-t border-gray-100">
-          <div className="text-sm text-gray-600 space-y-1">
-            <div>
-              After expenses:{" "}
-              <span className="font-semibold">
-                ${afterExpensesBalance.toLocaleString()}
-              </span>
-              {afterExpensesBalance < 0 && (
-                <span className="text-red-600 ml-1">(Deficit)</span>
-              )}
+        {/* Progress Indicators */}
+        <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Budget Utilization */}
+          <div className="bg-white rounded-2xl p-6 shadow-lg">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">Budget Utilization</h3>
+            <div className="space-y-4">
+              <div>
+                <div className="flex justify-between text-sm mb-2">
+                  <span className="text-gray-600">Total Outflow</span>
+                  <span className="font-semibold">{outflowPercentage.toFixed(1)}%</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-3">
+                  <div 
+                    className={`h-3 rounded-full transition-all duration-500 ${
+                      outflowPercentage > 90 ? 'bg-red-500' : 
+                      outflowPercentage > 75 ? 'bg-orange-500' : 'bg-green-500'
+                    }`}
+                    style={{ width: `${Math.min(outflowPercentage, 100)}%` }}
+                  ></div>
+                </div>
+                <div className="text-xs text-gray-500 mt-1">
+                  ${totalOutflow.toLocaleString()} of ${monthlyIncome.toLocaleString()}
+                </div>
+              </div>
+              
+              <div>
+                <div className="flex justify-between text-sm mb-2">
+                  <span className="text-gray-600">Savings Rate</span>
+                  <span className="font-semibold">{savingsPercentage.toFixed(1)}%</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-3">
+                  <div 
+                    className="h-3 rounded-full bg-blue-500 transition-all duration-500"
+                    style={{ width: `${Math.min(savingsPercentage, 100)}%` }}
+                  ></div>
+                </div>
+                <div className="text-xs text-gray-500 mt-1">
+                  ${totalSavings.toLocaleString()} of ${monthlyIncome.toLocaleString()}
+                </div>
+              </div>
             </div>
-            <div>
-              After subscriptions:{" "}
-              <span className="font-semibold">
-                ${afterSubscriptionsBalance.toLocaleString()}
-              </span>
-              {afterSubscriptionsBalance < 0 && (
-                <span className="text-red-600 ml-1">(Deficit)</span>
-              )}
+          </div>
+
+          {/* Quick Summary */}
+          <div className="bg-white rounded-2xl p-6 shadow-lg">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">Quick Summary</h3>
+            <div className="space-y-3">
+              <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                <span className="text-gray-600">After Expenses</span>
+                <span className={`font-semibold ${afterExpensesBalance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  ${afterExpensesBalance.toLocaleString()}
+                </span>
+              </div>
+              <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                <span className="text-gray-600">After Subscriptions</span>
+                <span className={`font-semibold ${afterSubscriptionsBalance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  ${afterSubscriptionsBalance.toLocaleString()}
+                </span>
+              </div>
+              <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                <span className="text-gray-600">Available for Savings</span>
+                <span className="font-semibold text-blue-600">
+                  ${Math.max(0, remainingBalance).toLocaleString()}
+                </span>
+              </div>
             </div>
           </div>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 };
 
