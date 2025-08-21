@@ -94,11 +94,27 @@ export default function DashboardPage() {
     if (isLoggedIn) loadAll();
   }, [isLoggedIn]);
 
+  // Debug: Track savingsBins changes
+  useEffect(() => {
+    console.log('SavingsBins state changed:', savingsBins);
+  }, [savingsBins]);
+
   const totalExpenses = fixedExpenses.reduce((sum, e) => sum + e.amount, 0);
   const totalSavings = savingsBins.reduce((sum, b) => sum + b.monthlyAllocation, 0);
   const totalSaved = savingsBins.reduce((sum, b) => sum + b.currentAmount, 0);
   const remainingBalance = monthlyIncome - totalExpenses - totalSavings;
   const availableForSavings = monthlyIncome - totalExpenses - totalSaved;
+
+  // Debug logging
+  console.log('Dashboard calculations:', {
+    monthlyIncome,
+    totalExpenses,
+    totalSavings,
+    totalSaved,
+    remainingBalance,
+    availableForSavings,
+    savingsBinsCount: savingsBins.length
+  });
 
   const processScheduledTransfers = async () => {
     try {

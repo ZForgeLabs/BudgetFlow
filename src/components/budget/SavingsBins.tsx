@@ -257,6 +257,7 @@ const SavingsBins = ({
       bin.id === id ? { ...bin, currentAmount: newAmount } : bin,
     );
     setBins(updatedBins);
+    console.log('Calling onBinsChange with updated bins:', updatedBins);
     onBinsChange(updatedBins);
     setSavedInputs((prev) => ({ ...prev, [id]: "" }));
     
