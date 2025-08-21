@@ -8,6 +8,9 @@ SET last_paid_date = start_date
 WHERE last_paid_date IS NULL;
 
 -- Create schedules table for savings bin scheduling
+-- First drop the table if it exists to fix any constraint issues
+DROP TABLE IF EXISTS public.schedules CASCADE;
+
 CREATE TABLE IF NOT EXISTS public.schedules (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,

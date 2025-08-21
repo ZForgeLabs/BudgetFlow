@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
-import { Plus, Trash2, Target, Settings2, PiggyBank, TrendingUp, Calendar, DollarSign } from "lucide-react";
+import { Plus, Trash2, Target, Settings2, PiggyBank, Calendar, DollarSign } from "lucide-react";
 
 interface SavingsBin {
   id: string;
@@ -372,54 +372,6 @@ const SavingsBins = ({
     }
   };
 
-  const processScheduledTransfers = async () => {
-    try {
-      const res = await fetch("/api/schedules/process", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-      });
-      
-      if (!res.ok) {
-        const errorText = await res.text();
-        throw new Error(`Request failed: ${res.status} - ${errorText}`);
-      }
-      
-      const data = await res.json();
-      
-      if (data.processedTransfers && data.processedTransfers.length > 0) {
-        // Refresh the bins data
-        const binsRes = await fetch("/api/bins", { cache: "no-store" });
-        if (binsRes.ok) {
-          const { items } = await binsRes.json();
-          setBins(items.map((b: any) => ({
-            id: String(b.id),
-            name: b.name,
-            currentAmount: Number(b.current_amount) || 0,
-            goalAmount: Number(b.goal_amount) || 0,
-            monthlyAllocation: Number(b.monthly_allocation) || 0,
-          })));
-          onBinsChange(items);
-        }
-        
-        toast({ 
-          title: "Transfers processed", 
-          description: `${data.processedTransfers.length} transfers completed successfully` 
-        });
-      } else {
-        toast({ 
-          title: "No transfers due", 
-          description: "No scheduled transfers were due today" 
-        });
-      }
-    } catch (e) {
-      console.error('Error processing transfers:', e);
-      toast({ 
-        title: "Failed to process transfers", 
-        description: e instanceof Error ? e.message : "Please try again" 
-      });
-    }
-  };
-
   const getProgressPercentage = (current: number, goal: number) => {
     return goal > 0 ? Math.min((current / goal) * 100, 100) : 0;
   };
@@ -470,23 +422,6 @@ const SavingsBins = ({
       </div>
 
       <div className="space-y-4">
-        {/* Manual Transfer Processing Button */}
-        <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
-          <div className="flex items-center justify-between">
-            <div>
-              <h4 className="font-medium text-white text-lg">Scheduled Transfers</h4>
-              <p className="text-blue-100 text-sm">Process any transfers that are due today</p>
-            </div>
-            <Button
-              onClick={processScheduledTransfers}
-              className="bg-white text-blue-600 hover:bg-blue-50 font-semibold"
-            >
-              <TrendingUp className="h-4 w-4 mr-2" />
-              Process Transfers
-            </Button>
-          </div>
-        </div>
-
         {/* Existing Bins */}
         <div className="space-y-4">
           {bins.map((bin) => {
