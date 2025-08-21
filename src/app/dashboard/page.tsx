@@ -207,13 +207,6 @@ export default function DashboardPage() {
           </div>
           <div className="flex items-center gap-3">
             <Button
-              onClick={processScheduledTransfers}
-              className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold"
-            >
-              <Calendar className="h-4 w-4 mr-2" />
-              Process Transfers
-            </Button>
-            <Button
               variant="outline"
               onClick={async () => {
                 setSigningOut(true);

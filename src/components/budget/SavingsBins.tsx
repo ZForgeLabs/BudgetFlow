@@ -463,7 +463,7 @@ const SavingsBins = ({
       case 'custom':
         return 'Custom allocation';
       default:
-        return 'Monthly allocation';
+        return 'Transfer Amount Allocation';
     }
   };
 
@@ -572,7 +572,7 @@ const SavingsBins = ({
                       </div>
 
                       <div className="space-y-2">
-                        <Label className="text-sm text-blue-100">Monthly allocation</Label>
+                        <Label className="text-sm text-blue-100">Transfer Amount</Label>
                         <Input
                           type="number"
                           placeholder="0"
@@ -588,7 +588,7 @@ const SavingsBins = ({
                       </div>
 
                       <div className="space-y-2">
-                        <div className="text-sm font-medium text-white">Scheduled transfer</div>
+                        <div className="text-sm font-medium text-white">Transfer Amount Allocation</div>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                           <div className="space-y-2">
                             <Label className="text-sm text-blue-100">Frequency</Label>
@@ -683,7 +683,7 @@ const SavingsBins = ({
                               )
                             }
                           >
-                            Save Schedule
+                            Process Transfer
                           </Button>
                         </div>
                         {bin.scheduledFrequency && (
