@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Plus, Trash2, DollarSign, TrendingUp, TrendingDown } from "lucide-react";
+import { Plus, Trash2, DollarSign, TrendingUp, TrendingDown, ChevronDown, ChevronUp } from "lucide-react";
 
 interface Expense {
   id: string;
@@ -36,6 +36,7 @@ const IncomeExpenseForm = ({
   const [expenses, setExpenses] = useState<Expense[]>(fixedExpenses);
   const [newExpenseName, setNewExpenseName] = useState("");
   const [newExpenseAmount, setNewExpenseAmount] = useState("");
+  const [showAllExpenses, setShowAllExpenses] = useState(false);
 
   // Update internal state when props change
   useEffect(() => {
@@ -229,34 +230,69 @@ const IncomeExpenseForm = ({
         <div className="space-y-4">
           {/* Existing Expenses */}
           <div className="space-y-3">
-            {expenses.map((expense) => (
-              <div key={expense.id} className="flex items-center gap-3 bg-white/10 rounded-xl p-3 backdrop-blur-sm">
-                <Input
-                  placeholder="Expense name"
-                  value={expense.name}
-                  onChange={(e) => updateExpense(expense.id, "name", e.target.value)}
-                  className="flex-1 bg-white text-gray-900"
-                />
-                <div className="relative w-28">
-                  <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-600">$</span>
-                  <Input
-                    type="number"
-                    placeholder="0"
-                    value={expense.amount.toString()}
-                    onChange={(e) => updateExpense(expense.id, "amount", e.target.value)}
-                    className="w-28 pl-8 bg-white text-gray-900"
-                  />
-                </div>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => removeExpense(expense.id)}
-                  className="flex-shrink-0 border-white/30 text-black bg-white/90 hover:bg-white"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
+            {expenses.length === 0 ? (
+              <div className="text-center py-8 text-red-100">
+                <TrendingDown className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                <p className="text-lg">No expenses yet.</p>
+                <p className="text-sm opacity-75">Add your first expense to get started!</p>
               </div>
-            ))}
+            ) : (
+              <>
+                {/* Show first 4 expenses always, or all if expanded */}
+                {(showAllExpenses ? expenses : expenses.slice(0, 4)).map((expense) => (
+                  <div key={expense.id} className="flex items-center gap-3 bg-white/10 rounded-xl p-3 backdrop-blur-sm">
+                    <Input
+                      placeholder="Expense name"
+                      value={expense.name}
+                      onChange={(e) => updateExpense(expense.id, "name", e.target.value)}
+                      className="flex-1 bg-white text-gray-900"
+                    />
+                    <div className="relative w-28">
+                      <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-600">$</span>
+                      <Input
+                        type="number"
+                        placeholder="0"
+                        value={expense.amount.toString()}
+                        onChange={(e) => updateExpense(expense.id, "amount", e.target.value)}
+                        className="w-28 pl-8 bg-white text-gray-900"
+                      />
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => removeExpense(expense.id)}
+                      className="flex-shrink-0 border-white/30 text-black bg-white/90 hover:bg-white"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+
+                {/* Show expand/collapse button if more than 4 expenses */}
+                {expenses.length > 4 && (
+                  <div className="flex justify-center pt-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShowAllExpenses(!showAllExpenses)}
+                      className="border-white/30 text-black bg-white/90 hover:bg-white transition-all duration-200"
+                    >
+                      {showAllExpenses ? (
+                        <>
+                          <ChevronUp className="h-4 w-4 mr-2" />
+                          Show Less ({expenses.length - 4} hidden)
+                        </>
+                      ) : (
+                        <>
+                          <ChevronDown className="h-4 w-4 mr-2" />
+                          Show All ({expenses.length - 4} more)
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                )}
+              </>
+            )}
           </div>
 
           {/* Add New Expense */}
