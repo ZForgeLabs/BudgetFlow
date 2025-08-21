@@ -120,7 +120,7 @@ export default function DashboardPage() {
   const totalExpenses = fixedExpenses.reduce((sum, e) => sum + e.amount, 0);
   const totalSavings = savingsBins.reduce((sum, b) => sum + b.monthlyAllocation, 0);
   const totalSaved = savingsBins.reduce((sum, b) => sum + b.currentAmount, 0);
-  const remainingBalance = monthlyIncome - totalExpenses - totalSavings;
+  const remainingBalance = monthlyIncome - totalExpenses - totalSavings - totalSaved;
   const availableForSavings = monthlyIncome - totalExpenses - totalSaved;
 
   // Debug logging
@@ -232,7 +232,7 @@ export default function DashboardPage() {
           monthlyIncome={monthlyIncome}
           totalExpenses={totalExpenses}
           totalSubscriptions={totalSubscriptionsMonthly}
-          totalSavings={totalSavings}
+          totalSavings={totalSavings + totalSaved}
           remainingBalance={remainingBalance - totalSubscriptionsMonthly}
         />
 
