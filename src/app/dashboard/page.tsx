@@ -329,6 +329,22 @@ export default function DashboardPage() {
           availableAmount={availableForSavings}
           onBinsChange={setSavingsBins}
         />
+
+        {/* Feedback Button */}
+        <div className="flex justify-center mt-8 mb-6">
+          <Button
+            asChild
+            className="bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white font-semibold px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
+          >
+            <a 
+              href="https://docs.google.com/forms/d/e/1FAIpQLSeju0-ry23OahtQk06yAVfhuUl-aOY5v5MKsHX_3iKxOTbssQ/viewform?usp=header" 
+              target="_blank" 
+              rel="noopener noreferrer"
+            >
+              💬 Suggest Feedback
+            </a>
+          </Button>
+        </div>
       </div>
     </main>
   );
