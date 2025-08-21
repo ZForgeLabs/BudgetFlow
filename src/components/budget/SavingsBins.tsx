@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
-import { Plus, Trash2, Target, Settings2 } from "lucide-react";
+import { Plus, Trash2, Target, Settings2, PiggyBank, TrendingUp, Calendar, DollarSign } from "lucide-react";
 
 interface SavingsBin {
   id: string;
@@ -312,25 +312,29 @@ const SavingsBins = ({
   };
 
   return (
-    <Card className="bg-white">
-      <CardHeader>
-        <CardTitle className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-          <Target className="h-5 w-5" />
-          Savings & Investment Bins
-        </CardTitle>
-        <div className="text-sm text-gray-600">
-          Available to allocate: {" "}
-          <span className="font-semibold">
-            ${remainingAmount.toLocaleString()}
-          </span>
+    <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-6 text-white shadow-lg hover:shadow-xl transition-all duration-300">
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center space-x-3">
+          <div className="p-3 rounded-xl bg-white/20 backdrop-blur-sm">
+            <PiggyBank className="h-6 w-6" />
+          </div>
+          <div>
+            <h3 className="text-2xl font-bold">Savings & Investment Bins</h3>
+            <p className="text-blue-100">Organize your savings goals</p>
+          </div>
+        </div>
+        <div className="text-right">
+          <div className="text-sm text-blue-100">Available to allocate:</div>
+          <div className="text-2xl font-bold">${remainingAmount.toLocaleString()}</div>
           {remainingAmount < 0 && (
-            <span className="text-red-600 ml-2">
-              (Over-allocated by ${Math.abs(remainingAmount).toLocaleString()})
-            </span>
+            <div className="text-red-200 text-sm mt-1">
+              Over-allocated by ${Math.abs(remainingAmount).toLocaleString()}
+            </div>
           )}
         </div>
-      </CardHeader>
-      <CardContent className="space-y-6">
+      </div>
+
+      <div className="space-y-4">
         {/* Existing Bins */}
         <div className="space-y-4">
           {bins.map((bin) => {
@@ -342,15 +346,16 @@ const SavingsBins = ({
             const scheduledFrequencyValue = bin.scheduledFrequency ?? "none";
             const isOpen = expanded[bin.id] ?? false;
             return (
-              <div key={bin.id} className="border rounded-lg p-4 space-y-4">
+              <div key={bin.id} className="bg-white/10 backdrop-blur-sm rounded-xl p-4 space-y-4 border border-white/20">
                 <div className="flex items-center justify-between gap-4">
                   <div>
-                    <h3 className="font-medium text-gray-900">{bin.name}</h3>
-                    <div className="text-sm text-gray-600">
+                    <h3 className="font-bold text-white text-lg">{bin.name}</h3>
+                    <div className="text-blue-100 text-sm">
                       ${bin.currentAmount.toLocaleString()} saved · Goal ${bin.goalAmount.toLocaleString()}
                     </div>
                     {bin.nextTransferDate && (
-                      <div className="text-xs text-blue-700 mt-1">
+                      <div className="text-xs text-blue-200 mt-1 flex items-center gap-1">
+                        <Calendar className="h-3 w-3" />
                         Next transfer on {bin.nextTransferDate}
                       </div>
                     )}
@@ -360,6 +365,7 @@ const SavingsBins = ({
                       variant="outline"
                       size="sm"
                       onClick={() => setExpanded((prev) => ({ ...prev, [bin.id]: !isOpen }))}
+                      className="border-white/30 text-white hover:bg-white/20"
                     >
                       <Settings2 className="h-4 w-4 mr-1" /> {isOpen ? "Hide" : "Manage"}
                     </Button>
@@ -367,6 +373,7 @@ const SavingsBins = ({
                       variant="outline"
                       size="sm"
                       onClick={() => removeBin(bin.id)}
+                      className="border-white/30 text-white hover:bg-white/20"
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
