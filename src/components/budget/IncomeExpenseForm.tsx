@@ -172,9 +172,11 @@ const IncomeExpenseForm = ({
         </div>
 
         {!isEditingIncome ? (
-          <div className="text-center">
-            <div className="text-3xl font-bold mb-1">${monthlyIncome.toLocaleString()}</div>
-            <p className="text-green-100 text-sm">per month</p>
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="text-3xl font-bold mb-1">${monthlyIncome.toLocaleString()}</div>
+              <p className="text-green-100 text-sm">per month</p>
+            </div>
           </div>
         ) : (
           <div className="bg-white/10 rounded-lg p-3 backdrop-blur-sm">
