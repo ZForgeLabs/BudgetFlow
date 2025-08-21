@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
     // Get the current subscription
     const { data: subscription, error: fetchError } = await supabase
       .from("subscriptions")
-      .select("next_billing_date, occurrence")
+      .select("next_billing_date, occurrence, last_paid_date")
       .eq("id", subscriptionId)
       .eq("user_id", user.id)
       .single();
@@ -42,10 +42,14 @@ export async function POST(req: NextRequest) {
       newBillingDate.setFullYear(newBillingDate.getFullYear() + 1);
     }
 
-    // Update the subscription
+    // Update the subscription with new billing date and mark as paid
+    const today = new Date().toISOString().split('T')[0];
     const { error: updateError } = await supabase
       .from("subscriptions")
-      .update({ next_billing_date: newBillingDate.toISOString().split('T')[0] })
+      .update({ 
+        next_billing_date: newBillingDate.toISOString().split('T')[0],
+        last_paid_date: today
+      })
       .eq("id", subscriptionId)
       .eq("user_id", user.id);
 

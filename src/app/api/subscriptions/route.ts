@@ -22,7 +22,7 @@ export async function GET() {
 		console.log("Subscriptions GET - fetching for user_id:", user.id);
 		const { data, error } = await supabase
 			.from("subscriptions")
-			.select("id, name, amount, occurrence, start_date, next_billing_date, created_at")
+			.select("id, name, amount, occurrence, start_date, next_billing_date, last_paid_date, created_at")
 			.eq("user_id", user.id)
 			.order("created_at", { ascending: false });
 

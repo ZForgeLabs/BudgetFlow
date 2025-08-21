@@ -10,6 +10,7 @@ import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import SpendingCharts from "@/components/dashboard/SpendingCharts";
+import PaymentStatusButton from "@/components/subscriptions/PaymentStatusButton";
 
 interface Expense {
   id: string;
@@ -246,29 +247,18 @@ export default function DashboardPage() {
                     {s.name} — ${Number(s.amount).toFixed(2)} — Started: {new Date(s.start_date).toLocaleDateString()} — Next: {s.next_billing_date ? new Date(s.next_billing_date).toLocaleDateString() : 'N/A'}
                   </span>
                   <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={async () => {
-                        try {
-                          const res = await fetch("/api/subscriptions/update-billing", {
-                            method: "POST",
-                            headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify({ subscriptionId: s.id }),
-                          });
-                          if (res.ok) {
-                            // Refresh the subscriptions list
-                            const r2 = await fetch("/api/subscriptions", { cache: "no-store" });
-                            const { items } = await r2.json();
-                            setSubs(items);
-                          }
-                        } catch (error) {
-                          console.error("Error updating billing date:", error);
-                        }
+                    <PaymentStatusButton
+                      subscriptionId={s.id}
+                      nextBillingDate={s.next_billing_date || s.start_date}
+                      lastPaidDate={s.last_paid_date}
+                      onPaymentUpdate={() => {
+                        // Refresh the subscriptions list
+                        fetch("/api/subscriptions", { cache: "no-store" })
+                          .then(res => res.json())
+                          .then(({ items }) => setSubs(items))
+                          .catch(error => console.error("Error refreshing subscriptions:", error));
                       }}
-                    >
-                      Mark Paid
-                    </Button>
+                    />
                     <Button
                       variant="secondary"
                       size="sm"
