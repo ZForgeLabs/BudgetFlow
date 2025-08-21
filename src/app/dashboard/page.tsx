@@ -244,7 +244,7 @@ export default function DashboardPage() {
               subs.map((s) => (
                 <li key={s.id} className="flex items-center justify-between">
                   <span>
-                    {s.name} — ${Number(s.amount).toFixed(2)} — Started: {new Date(s.start_date).toLocaleDateString()} — Next: {s.next_billing_date ? new Date(s.next_billing_date).toLocaleDateString() : 'N/A'}
+                    {s.name} — ${Number(s.amount).toFixed(2)} — Started: {new Date(s.start_date).toLocaleDateString()} — Next Payment: {s.next_billing_date ? new Date(s.next_billing_date).toLocaleDateString() : 'N/A'}
                   </span>
                   <div className="flex gap-2">
                     <PaymentStatusButton
