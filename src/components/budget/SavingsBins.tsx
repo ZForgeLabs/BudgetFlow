@@ -240,23 +240,42 @@ const SavingsBins = ({
       toast({ title: "Enter a positive amount" });
       return;
     }
+    
+    const bin = bins.find((b) => b.id === id);
+    if (!bin) {
+      toast({ title: "Bin not found" });
+      return;
+    }
+    
+    const newAmount = bin.currentAmount + delta;
+    
+    // Update local state immediately for better UX
     const updatedBins = bins.map((bin) =>
-      bin.id === id ? { ...bin, currentAmount: bin.currentAmount + delta } : bin,
+      bin.id === id ? { ...bin, currentAmount: newAmount } : bin,
     );
     setBins(updatedBins);
     onBinsChange(updatedBins);
     setSavedInputs((prev) => ({ ...prev, [id]: "" }));
-    toast({ title: "Transfer successful", description: "Saved amount updated" });
+    
+    // Update in database
     try {
-      const changed = updatedBins.find((b) => b.id === id);
-      if (changed) {
-        await fetch("/api/bins", {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ id, currentAmount: changed.currentAmount }),
-        });
+      const res = await fetch("/api/bins", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, currentAmount: newAmount }),
+      });
+      
+      if (!res.ok) {
+        const errorText = await res.text();
+        console.error('Failed to update saved amount:', errorText);
+        toast({ title: "Failed to save amount", description: "Please try again" });
+      } else {
+        toast({ title: "Transfer successful", description: "Saved amount updated" });
       }
-    } catch (e) {}
+    } catch (e) {
+      console.error('Error updating saved amount:', e);
+      toast({ title: "Failed to save amount", description: "Please try again" });
+    }
   };
 
   const updateBinScheduleLocal = (

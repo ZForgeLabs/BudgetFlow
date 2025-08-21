@@ -96,8 +96,50 @@ export default function DashboardPage() {
 
   const totalExpenses = fixedExpenses.reduce((sum, e) => sum + e.amount, 0);
   const totalSavings = savingsBins.reduce((sum, b) => sum + b.monthlyAllocation, 0);
+  const totalSaved = savingsBins.reduce((sum, b) => sum + b.currentAmount, 0);
   const remainingBalance = monthlyIncome - totalExpenses - totalSavings;
-  const availableForSavings = monthlyIncome - totalExpenses;
+  const availableForSavings = monthlyIncome - totalExpenses - totalSaved;
+
+  const processScheduledTransfers = async () => {
+    try {
+      const res = await fetch("/api/schedules/process", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+      
+      if (!res.ok) {
+        const errorText = await res.text();
+        throw new Error(`Request failed: ${res.status} - ${errorText}`);
+      }
+      
+      const data = await res.json();
+      
+      if (data.processedTransfers && data.processedTransfers.length > 0) {
+        // Refresh the bins data to show updated amounts
+        const binsRes = await fetch("/api/bins", { cache: "no-store" });
+        if (binsRes.ok) {
+          const { items } = await binsRes.json();
+          setSavingsBins(
+            items.map((b: any) => ({
+              id: String(b.id),
+              name: b.name,
+              currentAmount: Number(b.current_amount) || 0,
+              goalAmount: Number(b.goal_amount) || 0,
+              monthlyAllocation: Number(b.monthly_allocation) || 0,
+            })),
+          );
+        }
+        
+        // Show success message
+        alert(`${data.processedTransfers.length} transfers completed successfully!`);
+      } else {
+        alert("No scheduled transfers were due today.");
+      }
+    } catch (e) {
+      console.error('Error processing transfers:', e);
+      alert("Failed to process transfers. Please try again.");
+    }
+  };
 
   const monthlyize = (occurrence: string, amount: number) => {
     if (occurrence === "monthly") return amount;
@@ -119,35 +161,37 @@ export default function DashboardPage() {
   return (
     <main className="min-h-screen bg-gray-50 p-4 md:p-6 lg:p-8">
       <div className="max-w-7xl mx-auto space-y-6">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">Personal Budget Planner</h1>
-          <p className="text-gray-600 text-lg">Manage your monthly income, expenses, and savings goals</p>
-          {userName && (
-            <div className="mt-4 p-4 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl text-white shadow-lg">
-              <h2 className="text-xl font-semibold">👋 Welcome back, {userName}!</h2>
-              <p className="text-blue-100 text-sm mt-1">Ready to take control of your finances today?</p>
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center space-x-3">
+            <div className="p-3 rounded-xl bg-gradient-to-r from-blue-500 to-purple-600 text-white">
+              <Calendar className="h-6 w-6" />
             </div>
-          )}
-        </div>
-
-        <div className="flex justify-end mb-4">
-          {isLoggedIn ? (
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">Welcome back, {userName}!</h1>
+              <p className="text-gray-600">Manage your budget and track your progress</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
             <Button
-              className="bg-blue-400 hover:bg-blue-500 text-white"
-              disabled={signingOut}
+              onClick={processScheduledTransfers}
+              className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold"
+            >
+              <Calendar className="h-4 w-4 mr-2" />
+              Process Transfers
+            </Button>
+            <Button
+              variant="outline"
               onClick={async () => {
                 setSigningOut(true);
                 await supabase.auth.signOut();
-                router.replace("/login");
+                router.push("/login");
               }}
+              disabled={signingOut}
+              className="border-gray-300 text-gray-700 hover:bg-gray-50"
             >
-              {signingOut ? "Signing out..." : "Sign out"}
+              {signingOut ? "Signing out..." : "Sign Out"}
             </Button>
-          ) : (
-            <Button asChild>
-              <a href="/login">Log in</a>
-            </Button>
-          )}
+          </div>
         </div>
 
         <FinancialSummary
