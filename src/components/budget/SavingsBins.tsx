@@ -381,7 +381,7 @@ const SavingsBins = ({
                 </div>
 
                 <div className="space-y-2">
-                  <div className="flex justify-between text-sm text-gray-600">
+                  <div className="flex justify-between text-sm text-blue-100">
                     <span>Goal progress</span>
                     <span>{goalPct.toFixed(1)}%</span>
                   </div>
@@ -389,7 +389,7 @@ const SavingsBins = ({
                 </div>
 
                 <div className="space-y-2">
-                  <div className="flex justify-between text-sm text-gray-600">
+                  <div className="flex justify-between text-sm text-blue-100">
                     <span>Monthly allocation</span>
                     <span>${bin.monthlyAllocation.toLocaleString()}</span>
                   </div>
@@ -397,10 +397,10 @@ const SavingsBins = ({
                 </div>
 
                 {isOpen && (
-                  <div className="pt-2 border-t space-y-4">
+                  <div className="pt-2 border-t border-white/20 space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div className="space-y-2">
-                        <Label className="text-sm">Add to saved amount</Label>
+                        <Label className="text-sm text-blue-100">Add to saved amount</Label>
                         <div className="flex items-center gap-2">
                           <Input
                             type="number"
@@ -409,13 +409,14 @@ const SavingsBins = ({
                             onChange={(e) =>
                               setSavedInputs((prev) => ({ ...prev, [bin.id]: e.target.value }))
                             }
+                            className="bg-white/90 text-gray-900 placeholder-gray-600 border-white/30"
                           />
-                          <Button onClick={() => addToSavedAmount(bin.id)} className="bg-blue-600 hover:bg-blue-700 text-white">Save</Button>
+                          <Button onClick={() => addToSavedAmount(bin.id)} className="bg-white text-blue-600 hover:bg-blue-50">Save</Button>
                         </div>
                       </div>
 
                       <div className="space-y-2">
-                        <Label className="text-sm">Monthly allocation</Label>
+                        <Label className="text-sm text-blue-100">Monthly allocation</Label>
                         <Input
                           type="number"
                           placeholder="0"
@@ -426,19 +427,20 @@ const SavingsBins = ({
                               parseFloat(e.target.value) || 0,
                             )
                           }
+                          className="bg-white/90 text-gray-900 placeholder-gray-600 border-white/30"
                         />
                       </div>
 
                       <div className="space-y-2">
-                        <div className="text-sm font-medium text-gray-900">Scheduled monthly transfer</div>
+                        <div className="text-sm font-medium text-white">Scheduled monthly transfer</div>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                           <div className="space-y-2">
-                            <Label className="text-sm">Frequency</Label>
+                            <Label className="text-sm text-blue-100">Frequency</Label>
                             <div className="space-y-2">
                               <div className="flex flex-col space-y-1">
                                 <button
                                   type="button"
-                                  className={`px-3 py-2 text-sm rounded-md transition-colors text-left ${!bin.scheduledFrequency ? "bg-blue-600 text-white" : "text-gray-700 hover:bg-gray-200 border"}`}
+                                  className={`px-3 py-2 text-sm rounded-md transition-colors text-left ${!bin.scheduledFrequency ? "bg-white text-blue-600" : "text-white hover:bg-white/20 border border-white/30"}`}
                                   onClick={() =>
                                     updateBinScheduleLocal(
                                       bin.id,
@@ -454,7 +456,7 @@ const SavingsBins = ({
                                   <button
                                     key={f.value}
                                     type="button"
-                                    className={`px-3 py-2 text-sm rounded-md transition-colors text-left ${bin.scheduledFrequency === f.value ? "bg-blue-600 text-white" : "text-gray-700 hover:bg-gray-200 border"}`}
+                                    className={`px-3 py-2 text-sm rounded-md transition-colors text-left ${bin.scheduledFrequency === f.value ? "bg-white text-blue-600" : "text-white hover:bg-white/20 border border-white/30"}`}
                                     onClick={() =>
                                       updateBinScheduleLocal(
                                         bin.id,
@@ -473,7 +475,7 @@ const SavingsBins = ({
                           {bin.scheduledFrequency === "custom" && (
                             <>
                               <div className="space-y-2">
-                                <Label className="text-sm">Month</Label>
+                                <Label className="text-sm text-blue-100">Month</Label>
                                 <Select
                                   value={bin.customMonth ? String(bin.customMonth) : "none"}
                                   onValueChange={(val) =>
@@ -485,7 +487,7 @@ const SavingsBins = ({
                                     )
                                   }
                                 >
-                                  <SelectTrigger>
+                                  <SelectTrigger className="bg-white/90 text-gray-900 border-white/30">
                                     <SelectValue placeholder="Select month" />
                                   </SelectTrigger>
                                   <SelectContent>
@@ -499,7 +501,7 @@ const SavingsBins = ({
                                 </Select>
                               </div>
                               <div className="space-y-2">
-                                <Label className="text-sm">Day</Label>
+                                <Label className="text-sm text-blue-100">Day</Label>
                                 <Select
                                   value={bin.customDay ? String(bin.customDay) : "none"}
                                   onValueChange={(val) =>
@@ -511,7 +513,7 @@ const SavingsBins = ({
                                     )
                                   }
                                 >
-                                  <SelectTrigger>
+                                  <SelectTrigger className="bg-white/90 text-gray-900 border-white/30">
                                     <SelectValue placeholder="Select day" />
                                   </SelectTrigger>
                                   <SelectContent>
@@ -529,7 +531,7 @@ const SavingsBins = ({
                         </div>
                         <div className="mt-4">
                           <Button
-                            className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                            className="w-full bg-white text-blue-600 hover:bg-blue-50"
                             onClick={() =>
                               submitSchedule(
                                 bin.id,
@@ -543,7 +545,7 @@ const SavingsBins = ({
                           </Button>
                         </div>
                         {bin.scheduledFrequency && (
-                          <div className="text-xs text-gray-600 mt-2">
+                          <div className="text-xs text-blue-100 mt-2">
                             Scheduled: {frequencyOptions.find(f => f.value === bin.scheduledFrequency)?.label}
                             {bin.scheduledFrequency === "custom" && bin.customMonth && bin.customDay
                               ? ` on ${monthOptions.find(m => Number(m.value) === bin.customMonth)?.label} ${bin.customDay}`
