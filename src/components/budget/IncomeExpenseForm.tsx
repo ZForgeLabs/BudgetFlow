@@ -149,22 +149,22 @@ const IncomeExpenseForm = ({
   return (
     <div className="space-y-6">
       {/* Monthly Income Section */}
-      <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-2xl p-6 text-white shadow-lg hover:shadow-xl transition-all duration-300">
-        <div className="flex items-center justify-between mb-6">
+      <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-2xl p-4 text-white shadow-lg hover:shadow-xl transition-all duration-300">
+        <div className="flex items-center justify-between mb-3">
           <div className="flex items-center space-x-3">
-            <div className="p-3 rounded-xl bg-white/20 backdrop-blur-sm">
-              <TrendingUp className="h-6 w-6" />
+            <div className="p-2 rounded-lg bg-white/20 backdrop-blur-sm">
+              <TrendingUp className="h-5 w-5" />
             </div>
             <div>
-              <h3 className="text-2xl font-bold">Monthly Income</h3>
-              <p className="text-green-100">Set your total monthly earnings</p>
+              <h3 className="text-xl font-bold">Monthly Income</h3>
+              <p className="text-green-100 text-sm">Set your total monthly earnings</p>
             </div>
           </div>
           {!isEditingIncome && (
             <Button 
               variant="outline" 
               onClick={startEditingIncome}
-              className="border-white/30 text-white hover:bg-white/20"
+              className="border-white/30 text-white hover:bg-white/20 text-sm px-3 py-1"
             >
               Edit Income
             </Button>
@@ -173,12 +173,12 @@ const IncomeExpenseForm = ({
 
         {!isEditingIncome ? (
           <div className="text-center">
-            <div className="text-4xl font-bold mb-2">${monthlyIncome.toLocaleString()}</div>
-            <p className="text-green-100">per month</p>
+            <div className="text-3xl font-bold mb-1">${monthlyIncome.toLocaleString()}</div>
+            <p className="text-green-100 text-sm">per month</p>
           </div>
         ) : (
-          <div className="bg-white/10 rounded-xl p-4 backdrop-blur-sm">
-            <div className="flex items-center gap-3">
+          <div className="bg-white/10 rounded-lg p-3 backdrop-blur-sm">
+            <div className="flex items-center gap-2">
               <div className="relative flex-1">
                 <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-600">$</span>
                 <Input
@@ -193,7 +193,7 @@ const IncomeExpenseForm = ({
               <Button 
                 type="button" 
                 onClick={saveIncome} 
-                className="bg-white text-green-600 hover:bg-green-50"
+                className="bg-white text-green-600 hover:bg-green-50 text-sm px-3 py-1"
               >
                 Save
               </Button>
@@ -201,7 +201,7 @@ const IncomeExpenseForm = ({
                 type="button" 
                 variant="outline" 
                 onClick={cancelEditingIncome}
-                className="border-white/30 text-white hover:bg-white/20"
+                className="border-white/30 text-white hover:bg-white/20 text-sm px-3 py-1"
               >
                 Cancel
               </Button>
