@@ -164,7 +164,7 @@ const IncomeExpenseForm = ({
             <Button 
               variant="outline" 
               onClick={startEditingIncome}
-              className="border-white/30 text-white hover:bg-white/20 text-sm px-3 py-1"
+              className="border-white/30 text-black bg-white/90 hover:bg-white text-sm px-3 py-1"
             >
               Edit Income
             </Button>
