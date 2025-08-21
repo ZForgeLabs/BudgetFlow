@@ -38,6 +38,8 @@ export default function CustomSignupForm({ onSuccess, onSwitchToLogin }: CustomS
     }
 
     try {
+      const redirectTo = typeof window !== "undefined" ? `${window.location.origin}/auth/callback` : undefined;
+      
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -47,13 +49,16 @@ export default function CustomSignupForm({ onSuccess, onSwitchToLogin }: CustomS
             last_name: lastName.trim(),
             full_name: `${firstName.trim()} ${lastName.trim()}`,
           },
+          emailRedirectTo: redirectTo,
         },
       });
 
       if (error) {
+        console.error("Signup error:", error);
         setError(error.message);
       } else if (data.user) {
         // Success! User created
+        console.log("User created successfully:", data.user);
         onSuccess();
       }
     } catch (err) {
