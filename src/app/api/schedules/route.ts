@@ -95,21 +95,40 @@ export async function DELETE(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");
-    if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
+    const binId = searchParams.get("binId");
+    
+    if (!id && !binId) {
+      return NextResponse.json({ error: "Missing id or binId" }, { status: 400 });
+    }
 
     const supabase = createRouteHandlerClient({ cookies });
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    const { error } = await supabase
+    let query = supabase
       .from("schedules")
       .delete()
-      .eq("id", id)
       .eq("user_id", user.id);
+    
+    if (id) {
+      query = query.eq("id", id);
+    } else if (binId) {
+      query = query.eq("bin_id", binId);
+    }
 
-    if (error) throw error;
+    const { error } = await query;
+
+    if (error) {
+      console.error('Supabase delete error:', error);
+      return NextResponse.json({ error: `Database error: ${error.message}` }, { status: 400 });
+    }
+    
     return NextResponse.json({ ok: true });
-  } catch {
-    return NextResponse.json({ error: "Failed to delete" }, { status: 400 });
+  } catch (error) {
+    console.error('Unexpected error in DELETE /api/schedules:', error);
+    return NextResponse.json({ 
+      error: "Failed to delete", 
+      details: error instanceof Error ? error.message : "Unknown error" 
+    }, { status: 400 });
   }
 }

@@ -372,6 +372,45 @@ const SavingsBins = ({
     }
   };
 
+  const cancelSchedule = async (binId: string) => {
+    try {
+      const res = await fetch(`/api/schedules?binId=${binId}`, {
+        method: "DELETE",
+      });
+      
+      if (!res.ok) {
+        const errorText = await res.text();
+        throw new Error(`Request failed: ${res.status} - ${errorText}`);
+      }
+      
+      // Update local state to remove the schedule
+      const updatedBins = bins.map((b) =>
+        b.id === binId 
+          ? { 
+              ...b, 
+              scheduledFrequency: null, 
+              customMonth: null, 
+              customDay: null, 
+              nextTransferDate: null 
+            } 
+          : b
+      );
+      setBins(updatedBins);
+      onBinsChange(updatedBins);
+      
+      toast({ 
+        title: "Schedule cancelled", 
+        description: "The scheduled transfer has been cancelled" 
+      });
+    } catch (e) {
+      console.error('Error cancelling schedule:', e);
+      toast({ 
+        title: "Failed to cancel schedule", 
+        description: e instanceof Error ? e.message : "Please try again" 
+      });
+    }
+  };
+
   const getProgressPercentage = (current: number, goal: number) => {
     return goal > 0 ? Math.min((current / goal) * 100, 100) : 0;
   };
@@ -618,11 +657,33 @@ const SavingsBins = ({
                           </Button>
                         </div>
                         {bin.scheduledFrequency && (
-                          <div className="text-xs text-blue-100 mt-2">
-                            Scheduled: {frequencyOptions.find(f => f.value === bin.scheduledFrequency)?.label}
-                            {bin.scheduledFrequency === "custom" && bin.customMonth && bin.customDay
-                              ? ` on ${monthOptions.find(m => Number(m.value) === bin.customMonth)?.label} ${bin.customDay}`
-                              : ""}
+                          <div className="bg-white/5 rounded-lg p-3 border border-white/10 mt-4">
+                            <div className="flex items-center justify-between">
+                              <div className="text-sm text-blue-100">
+                                <div className="font-medium mb-1">Current Schedule:</div>
+                                <div>
+                                  {frequencyOptions.find(f => f.value === bin.scheduledFrequency)?.label}
+                                  {bin.scheduledFrequency === "custom" && bin.customMonth && bin.customDay
+                                    ? ` on ${monthOptions.find(m => Number(m.value) === bin.customMonth)?.label} ${bin.customDay}`
+                                    : ""}
+                                </div>
+                                {bin.nextTransferDate && (
+                                  <div className="text-xs text-blue-200 mt-1 flex items-center gap-1">
+                                    <Calendar className="h-3 w-3" />
+                                    Next transfer: {bin.nextTransferDate}
+                                  </div>
+                                )}
+                              </div>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => cancelSchedule(bin.id)}
+                                className="border-red-300 text-red-300 hover:bg-red-500 hover:text-white transition-colors"
+                              >
+                                <Trash2 className="h-4 w-4 mr-1" />
+                                Cancel
+                              </Button>
+                            </div>
                           </div>
                         )}
                       </div>
