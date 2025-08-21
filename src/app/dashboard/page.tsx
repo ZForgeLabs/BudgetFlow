@@ -403,6 +403,7 @@ export default function DashboardPage() {
           totalFixedExpenses={totalExpenses}
           totalSubscriptionsMonthly={totalSubscriptionsMonthly}
           totalSavings={totalSavings}
+          totalSaved={totalSaved}
         />
 
         <SavingsBins
