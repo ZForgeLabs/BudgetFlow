@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import SpendingCharts from "@/components/dashboard/SpendingCharts";
 import PaymentStatusButton from "@/components/subscriptions/PaymentStatusButton";
-import { CreditCard } from "lucide-react";
+import { CreditCard, Calendar, DollarSign } from "lucide-react";
 
 interface Expense {
   id: string;
