@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import SpendingCharts from "@/components/dashboard/SpendingCharts";
 import PaymentStatusButton from "@/components/subscriptions/PaymentStatusButton";
-import { CreditCard, Calendar, DollarSign } from "lucide-react";
+import { CreditCard, Calendar, DollarSign, ChevronDown, ChevronUp } from "lucide-react";
 
 interface Expense {
   id: string;
@@ -41,6 +41,7 @@ export default function DashboardPage() {
   const [subOccurrence, setSubOccurrence] = useState<"monthly" | "bi-monthly" | "annually">("monthly");
   const [subStartDate, setSubStartDate] = useState("");
   const [userName, setUserName] = useState("");
+  const [showAllSubscriptions, setShowAllSubscriptions] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => setIsLoggedIn(!!session));
@@ -270,58 +271,85 @@ export default function DashboardPage() {
                 <p className="text-sm opacity-75">Add your first subscription to get started!</p>
               </div>
             ) : (
-              subs.map((s) => (
-                <div key={s.id} className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-3 mb-2">
-                        <div className="p-2 rounded-lg bg-white/20">
-                          <CreditCard className="h-4 w-4" />
+              <>
+                {/* Show first 4 subscriptions always, or all if expanded */}
+                {(showAllSubscriptions ? subs : subs.slice(0, 4)).map((s) => (
+                  <div key={s.id} className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-3 mb-2">
+                          <div className="p-2 rounded-lg bg-white/20">
+                            <CreditCard className="h-4 w-4" />
+                          </div>
+                          <div>
+                            <h4 className="font-semibold text-white">{s.name}</h4>
+                            <p className="text-orange-100 text-sm">${Number(s.amount).toFixed(2)}</p>
+                          </div>
                         </div>
-                        <div>
-                          <h4 className="font-semibold text-white">{s.name}</h4>
-                          <p className="text-orange-100 text-sm">${Number(s.amount).toFixed(2)}</p>
+                        <div className="text-orange-100 text-xs space-y-1">
+                          <div className="flex items-center space-x-2">
+                            <Calendar className="h-3 w-3" />
+                            <span>Started: {new Date(s.start_date).toLocaleDateString()}</span>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <DollarSign className="h-3 w-3" />
+                            <span>Next Payment: {s.next_billing_date ? new Date(s.next_billing_date).toLocaleDateString() : 'N/A'}</span>
+                          </div>
                         </div>
                       </div>
-                      <div className="text-orange-100 text-xs space-y-1">
-                        <div className="flex items-center space-x-2">
-                          <Calendar className="h-3 w-3" />
-                          <span>Started: {new Date(s.start_date).toLocaleDateString()}</span>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <DollarSign className="h-3 w-3" />
-                          <span>Next Payment: {s.next_billing_date ? new Date(s.next_billing_date).toLocaleDateString() : 'N/A'}</span>
-                        </div>
+                      <div className="flex gap-2">
+                        <PaymentStatusButton
+                          subscriptionId={s.id}
+                          nextBillingDate={s.next_billing_date || s.start_date}
+                          lastPaidDate={s.last_paid_date}
+                          onPaymentUpdate={() => {
+                            // Refresh the subscriptions list
+                            fetch("/api/subscriptions", { cache: "no-store" })
+                              .then(res => res.json())
+                              .then(({ items }) => setSubs(items))
+                              .catch(error => console.error("Error refreshing subscriptions:", error));
+                          }}
+                        />
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="border-white/30 text-black bg-white/90 hover:bg-white"
+                          onClick={async () => {
+                            await fetch(`/api/subscriptions?id=${s.id}`, { method: "DELETE" });
+                            setSubs((prev) => prev.filter((x) => x.id !== s.id));
+                          }}
+                        >
+                          Delete
+                        </Button>
                       </div>
-                    </div>
-                    <div className="flex gap-2">
-                      <PaymentStatusButton
-                        subscriptionId={s.id}
-                        nextBillingDate={s.next_billing_date || s.start_date}
-                        lastPaidDate={s.last_paid_date}
-                        onPaymentUpdate={() => {
-                          // Refresh the subscriptions list
-                          fetch("/api/subscriptions", { cache: "no-store" })
-                            .then(res => res.json())
-                            .then(({ items }) => setSubs(items))
-                            .catch(error => console.error("Error refreshing subscriptions:", error));
-                        }}
-                      />
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="border-white/30 text-black bg-white/90 hover:bg-white"
-                        onClick={async () => {
-                          await fetch(`/api/subscriptions?id=${s.id}`, { method: "DELETE" });
-                          setSubs((prev) => prev.filter((x) => x.id !== s.id));
-                        }}
-                      >
-                        Delete
-                      </Button>
                     </div>
                   </div>
-                </div>
-              ))
+                ))}
+
+                {/* Show expand/collapse button if more than 4 subscriptions */}
+                {subs.length > 4 && (
+                  <div className="flex justify-center pt-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShowAllSubscriptions(!showAllSubscriptions)}
+                      className="border-white/30 text-white hover:bg-white/20 transition-all duration-200"
+                    >
+                      {showAllSubscriptions ? (
+                        <>
+                          <ChevronUp className="h-4 w-4 mr-2" />
+                          Show Less ({subs.length - 4} hidden)
+                        </>
+                      ) : (
+                        <>
+                          <ChevronDown className="h-4 w-4 mr-2" />
+                          Show All ({subs.length - 4} more)
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                )}
+              </>
             )}
           </div>
         </div>
