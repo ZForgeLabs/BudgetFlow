@@ -80,14 +80,14 @@ export async function POST(req: NextRequest) {
         let transferAmount = 0;
         switch (schedule.frequency) {
           case 'weekly':
-            transferAmount = schedule.monthly_allocation / 4; // Weekly = monthly / 4
+            transferAmount = schedule.monthly_allocation; // Weekly = full monthly amount
             break;
           case 'semi-weekly':
-            transferAmount = schedule.monthly_allocation / 2; // Semi-weekly = monthly / 2
+            transferAmount = schedule.monthly_allocation; // Semi-weekly = full monthly amount
             break;
           case 'monthly':
           case 'custom':
-            transferAmount = schedule.monthly_allocation;
+            transferAmount = schedule.monthly_allocation; // Monthly/Custom = full monthly amount
             break;
         }
 

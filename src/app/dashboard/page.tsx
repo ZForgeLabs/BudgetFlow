@@ -99,6 +99,24 @@ export default function DashboardPage() {
     console.log('SavingsBins state changed:', savingsBins);
   }, [savingsBins]);
 
+  const refreshDashboardData = async () => {
+    console.log('Refreshing dashboard data...');
+    // Refresh the bins data
+    const binsRes = await fetch("/api/bins", { cache: "no-store" });
+    if (binsRes.ok) {
+      const { items } = await binsRes.json();
+      setSavingsBins(
+        items.map((b: any) => ({
+          id: String(b.id),
+          name: b.name,
+          currentAmount: Number(b.current_amount) || 0,
+          goalAmount: Number(b.goal_amount) || 0,
+          monthlyAllocation: Number(b.monthly_allocation) || 0,
+        })),
+      );
+    }
+  };
+
   const totalExpenses = fixedExpenses.reduce((sum, e) => sum + e.amount, 0);
   const totalSavings = savingsBins.reduce((sum, b) => sum + b.monthlyAllocation, 0);
   const totalSaved = savingsBins.reduce((sum, b) => sum + b.currentAmount, 0);
@@ -426,6 +444,7 @@ export default function DashboardPage() {
           savingsBins={savingsBins}
           availableAmount={availableForSavings}
           onBinsChange={setSavingsBins}
+          refreshDashboardData={refreshDashboardData}
         />
 
         {/* Feedback Button */}

@@ -26,6 +26,7 @@ interface SavingsBinsProps {
   savingsBins?: SavingsBin[];
   availableAmount?: number;
   onBinsChange?: (bins: SavingsBin[]) => void;
+  onRefresh?: () => void;
 }
 
 const frequencyOptions = [
@@ -146,6 +147,7 @@ const SavingsBins = ({
   ],
   availableAmount = 1600,
   onBinsChange = () => {},
+  onRefresh = () => {},
 }: SavingsBinsProps) => {
   const { toast } = useToast();
   const [bins, setBins] = useState<SavingsBin[]>(savingsBins);
@@ -279,6 +281,7 @@ const SavingsBins = ({
       } else {
         console.log('Successfully updated saved amount in database');
         toast({ title: "Transfer successful", description: "Saved amount updated" });
+        onRefresh(); // Trigger dashboard refresh
       }
     } catch (e) {
       console.error('Error updating saved amount:', e);
@@ -362,14 +365,14 @@ const SavingsBins = ({
       let transferAmount = 0;
       switch (frequency) {
         case 'weekly':
-          transferAmount = (bin.monthlyAllocation ?? 0) / 4;
+          transferAmount = bin.monthlyAllocation ?? 0; // Full monthly amount
           break;
         case 'semi-weekly':
-          transferAmount = (bin.monthlyAllocation ?? 0) / 2;
+          transferAmount = bin.monthlyAllocation ?? 0; // Full monthly amount
           break;
         case 'monthly':
         case 'custom':
-          transferAmount = bin.monthlyAllocation ?? 0;
+          transferAmount = bin.monthlyAllocation ?? 0; // Full monthly amount
           break;
       }
       

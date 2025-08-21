@@ -104,10 +104,16 @@ export default function SpendingCharts({
 			percentage: ((totalSubscriptionsMonthly / monthlyIncome) * 100).toFixed(1)
 		},
 		{ 
-			name: "Savings", 
+			name: "Scheduled Savings", 
 			value: totalSavings, 
 			color: COLORS.savings,
 			percentage: ((totalSavings / monthlyIncome) * 100).toFixed(1)
+		},
+		{ 
+			name: "Manual Savings", 
+			value: totalSaved, 
+			color: "#06b6d4", // Cyan color for manual savings
+			percentage: ((totalSaved / monthlyIncome) * 100).toFixed(1)
 		},
 		{ 
 			name: "Left Over", 
@@ -138,9 +144,14 @@ export default function SpendingCharts({
 			color: COLORS.subscriptions
 		},
 		{ 
-			name: "Savings", 
+			name: "Scheduled Savings", 
 			value: totalSavings,
 			color: COLORS.savings
+		},
+		{ 
+			name: "Manual Savings", 
+			value: totalSaved,
+			color: "#06b6d4" // Cyan color for manual savings
 		},
 		{ 
 			name: "Left Over", 
