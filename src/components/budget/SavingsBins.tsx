@@ -560,13 +560,13 @@ const SavingsBins = ({
         </div>
 
         {/* Add New Bin */}
-        <div className="border-t pt-4">
-          <h4 className="font-medium text-gray-900 mb-3">
+        <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
+          <h4 className="font-medium text-white mb-3 text-lg">
             Add New Savings Bin
           </h4>
-          <div className="flex items-end gap-2">
+          <div className="flex items-end gap-3">
             <div className="flex-1">
-              <Label htmlFor="new-bin-name" className="text-sm">
+              <Label htmlFor="new-bin-name" className="text-sm text-blue-100">
                 Bin Name
               </Label>
               <Input
@@ -574,10 +574,11 @@ const SavingsBins = ({
                 placeholder="e.g., Car Fund, Wedding"
                 value={newBinName}
                 onChange={(e) => setNewBinName(e.target.value)}
+                className="bg-white/90 text-gray-900 placeholder-gray-600 border-white/30"
               />
             </div>
             <div className="w-32">
-              <Label htmlFor="new-bin-goal" className="text-sm">
+              <Label htmlFor="new-bin-goal" className="text-sm text-blue-100">
                 Goal Amount
               </Label>
               <Input
@@ -586,16 +587,17 @@ const SavingsBins = ({
                 placeholder="5000"
                 value={newBinGoal}
                 onChange={(e) => setNewBinGoal(e.target.value)}
+                className="bg-white/90 text-gray-900 placeholder-gray-600 border-white/30"
               />
             </div>
-            <Button onClick={addBin} className="flex-shrink-0 bg-blue-600 hover:bg-blue-700 text-white">
+            <Button onClick={addBin} className="flex-shrink-0 bg-white text-blue-600 hover:bg-blue-50 font-semibold">
               <Plus className="h-4 w-4 mr-1" />
               Add Bin
             </Button>
           </div>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 };
 
