@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import SpendingCharts from "@/components/dashboard/SpendingCharts";
 import PaymentStatusButton from "@/components/subscriptions/PaymentStatusButton";
+import { CreditCard } from "lucide-react";
 
 interface Expense {
   id: string;
@@ -167,31 +168,43 @@ export default function DashboardPage() {
           onBinsChange={setSavingsBins}
         />
 
-        <div className="bg-white border rounded-lg p-4 space-y-4">
-          <div>
-            <h3 className="font-semibold mb-2">Subscriptions</h3>
-            <div className="flex items-center justify-between mb-4">
-              <span className="text-sm text-gray-600">Total Monthly Subscriptions:</span>
-              <span className="font-semibold text-gray-900">${totalSubscriptionsMonthly.toFixed(2)}</span>
+        <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl p-6 text-white shadow-lg hover:shadow-xl transition-all duration-300">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center space-x-3">
+              <div className="p-3 rounded-xl bg-white/20 backdrop-blur-sm">
+                <CreditCard className="h-6 w-6" />
+              </div>
+              <div>
+                <h3 className="text-2xl font-bold">Subscriptions</h3>
+                <p className="text-orange-100">Manage your recurring payments</p>
+              </div>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-2">
+            <div className="text-right">
+              <div className="text-sm text-orange-100">Total Monthly:</div>
+              <div className="text-2xl font-bold">${totalSubscriptionsMonthly.toFixed(2)}</div>
+            </div>
+          </div>
+
+          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20 mb-4">
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
               <Input
                 placeholder="Name (e.g., Netflix)"
                 value={subName}
                 onChange={(e) => setSubName(e.target.value)}
+                className="bg-white/90 text-gray-900 placeholder-gray-600 border-white/30"
               />
               <div className="relative">
-                <span className="pointer-events-none absolute left-2 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+                <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-600">$</span>
                 <Input
                   type="number"
                   placeholder="0"
                   value={subAmount}
                   onChange={(e) => setSubAmount(e.target.value === "" ? "" : Number(e.target.value))}
-                  className="pl-5"
+                  className="pl-8 bg-white/90 text-gray-900 placeholder-gray-600 border-white/30"
                 />
               </div>
               <Select value={subOccurrence} onValueChange={(v) => setSubOccurrence(v as any)}>
-                <SelectTrigger>
+                <SelectTrigger className="bg-white/90 text-gray-900 border-white/30">
                   <SelectValue placeholder="Occurrence" />
                 </SelectTrigger>
                 <SelectContent>
@@ -200,8 +213,14 @@ export default function DashboardPage() {
                   <SelectItem value="annually">Annually</SelectItem>
                 </SelectContent>
               </Select>
-              <Input type="date" value={subStartDate} onChange={(e) => setSubStartDate(e.target.value)} />
+              <Input 
+                type="date" 
+                value={subStartDate} 
+                onChange={(e) => setSubStartDate(e.target.value)}
+                className="bg-white/90 text-gray-900 border-white/30"
+              />
               <Button
+                className="bg-white text-orange-600 hover:bg-orange-50 font-semibold"
                 onClick={async () => {
                   console.log("Adding subscription:", { subName, subAmount, subOccurrence, subStartDate });
                   if (!subName || subAmount === "" || !subOccurrence || !subStartDate) {
@@ -247,43 +266,68 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          <ul className="text-sm space-y-1">
+          <div className="space-y-3">
             {subs.length === 0 ? (
-              <li className="text-gray-500">No subscriptions yet.</li>
+              <div className="text-center py-8 text-orange-100">
+                <CreditCard className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                <p className="text-lg">No subscriptions yet.</p>
+                <p className="text-sm opacity-75">Add your first subscription to get started!</p>
+              </div>
             ) : (
               subs.map((s) => (
-                <li key={s.id} className="flex items-center justify-between">
-                  <span>
-                    {s.name} — ${Number(s.amount).toFixed(2)} — Started: {new Date(s.start_date).toLocaleDateString()} — Next Payment: {s.next_billing_date ? new Date(s.next_billing_date).toLocaleDateString() : 'N/A'}
-                  </span>
-                  <div className="flex gap-2">
-                    <PaymentStatusButton
-                      subscriptionId={s.id}
-                      nextBillingDate={s.next_billing_date || s.start_date}
-                      lastPaidDate={s.last_paid_date}
-                      onPaymentUpdate={() => {
-                        // Refresh the subscriptions list
-                        fetch("/api/subscriptions", { cache: "no-store" })
-                          .then(res => res.json())
-                          .then(({ items }) => setSubs(items))
-                          .catch(error => console.error("Error refreshing subscriptions:", error));
-                      }}
-                    />
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      onClick={async () => {
-                        await fetch(`/api/subscriptions?id=${s.id}`, { method: "DELETE" });
-                        setSubs((prev) => prev.filter((x) => x.id !== s.id));
-                      }}
-                    >
-                      Delete
-                    </Button>
+                <div key={s.id} className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-3 mb-2">
+                        <div className="p-2 rounded-lg bg-white/20">
+                          <CreditCard className="h-4 w-4" />
+                        </div>
+                        <div>
+                          <h4 className="font-semibold text-white">{s.name}</h4>
+                          <p className="text-orange-100 text-sm">${Number(s.amount).toFixed(2)}</p>
+                        </div>
+                      </div>
+                      <div className="text-orange-100 text-xs space-y-1">
+                        <div className="flex items-center space-x-2">
+                          <Calendar className="h-3 w-3" />
+                          <span>Started: {new Date(s.start_date).toLocaleDateString()}</span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <DollarSign className="h-3 w-3" />
+                          <span>Next Payment: {s.next_billing_date ? new Date(s.next_billing_date).toLocaleDateString() : 'N/A'}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <PaymentStatusButton
+                        subscriptionId={s.id}
+                        nextBillingDate={s.next_billing_date || s.start_date}
+                        lastPaidDate={s.last_paid_date}
+                        onPaymentUpdate={() => {
+                          // Refresh the subscriptions list
+                          fetch("/api/subscriptions", { cache: "no-store" })
+                            .then(res => res.json())
+                            .then(({ items }) => setSubs(items))
+                            .catch(error => console.error("Error refreshing subscriptions:", error));
+                        }}
+                      />
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="border-white/30 text-white hover:bg-white/20"
+                        onClick={async () => {
+                          await fetch(`/api/subscriptions?id=${s.id}`, { method: "DELETE" });
+                          setSubs((prev) => prev.filter((x) => x.id !== s.id));
+                        }}
+                      >
+                        Delete
+                      </Button>
+                    </div>
                   </div>
-                </li>
+                </div>
               ))
             )}
-          </ul>
+          </div>
         </div>
       </div>
     </main>
