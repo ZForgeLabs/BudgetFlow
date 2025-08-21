@@ -40,6 +40,7 @@ export default function DashboardPage() {
   const [subAmount, setSubAmount] = useState<number | "">("");
   const [subOccurrence, setSubOccurrence] = useState<"monthly" | "bi-monthly" | "annually">("monthly");
   const [subStartDate, setSubStartDate] = useState("");
+  const [userName, setUserName] = useState("");
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => setIsLoggedIn(!!session));
@@ -51,11 +52,12 @@ export default function DashboardPage() {
 
   useEffect(() => {
     const loadAll = async () => {
-      // profile income
+      // profile income and name
       const resProfile = await fetch("/api/profile", { cache: "no-store" });
       if (resProfile.ok) {
-        const { monthlyIncome: mi } = await resProfile.json();
+        const { monthlyIncome: mi, fullName } = await resProfile.json();
         if (typeof mi === "number" && !Number.isNaN(mi)) setMonthlyIncome(mi);
+        if (fullName) setUserName(fullName);
       }
       // expenses
       const resExp = await fetch("/api/expenses", { cache: "no-store" });
@@ -119,6 +121,12 @@ export default function DashboardPage() {
         <div className="text-center mb-8">
           <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">Personal Budget Planner</h1>
           <p className="text-gray-600 text-lg">Manage your monthly income, expenses, and savings goals</p>
+          {userName && (
+            <div className="mt-4 p-4 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl text-white shadow-lg">
+              <h2 className="text-xl font-semibold">👋 Welcome back, {userName}!</h2>
+              <p className="text-blue-100 text-sm mt-1">Ready to take control of your finances today?</p>
+            </div>
+          )}
         </div>
 
         <div className="flex justify-end mb-4">

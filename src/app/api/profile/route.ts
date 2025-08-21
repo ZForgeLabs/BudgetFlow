@@ -15,7 +15,14 @@ export async function GET() {
 			.eq("user_id", user.id)
 			.single();
 		if (error && error.code !== "PGRST116") throw error; // no rows
-		return NextResponse.json({ monthlyIncome: data?.monthly_income ?? null });
+		
+		// Get user's name from auth user data
+		const fullName = user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split('@')[0] || 'User';
+		
+		return NextResponse.json({ 
+			monthlyIncome: data?.monthly_income ?? null,
+			fullName: fullName
+		});
 	} catch {
 		return NextResponse.json({ error: "Failed to fetch" }, { status: 500 });
 	}
