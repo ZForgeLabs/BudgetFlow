@@ -105,6 +105,80 @@ export async function POST(req: NextRequest) {
 	}
 }
 
+export async function PATCH(req: NextRequest) {
+	try {
+		const { searchParams } = new URL(req.url);
+		const id = searchParams.get("id");
+		if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
+
+		const body = await req.json();
+		console.log("Subscriptions PATCH - received body:", body);
+		const { name, amount, occurrence, startDate } = body ?? {};
+		
+		if (!name || amount === undefined || !occurrence || !startDate) {
+			console.log("Subscriptions PATCH - validation failed:", { name, amount, occurrence, startDate });
+			return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+		}
+		if (!allowed.has(occurrence)) {
+			console.log("Subscriptions PATCH - invalid occurrence:", occurrence);
+			return NextResponse.json({ error: "Invalid occurrence" }, { status: 400 });
+		}
+
+		const supabase = createRouteHandlerClient({ cookies });
+		const { data: { user }, error: authError } = await supabase.auth.getUser();
+		
+		if (authError) {
+			console.log("Subscriptions PATCH - auth error:", authError);
+			return NextResponse.json({ error: "Authentication error", details: authError }, { status: 401 });
+		}
+		
+		if (!user) {
+			console.log("Subscriptions PATCH - unauthorized");
+			return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+		}
+
+		// Calculate next billing date based on occurrence
+		const startDateObj = new Date(startDate);
+		let nextBillingDate = new Date(startDateObj);
+		
+		if (occurrence === "monthly") {
+			nextBillingDate.setMonth(nextBillingDate.getMonth() + 1);
+		} else if (occurrence === "bi-monthly") {
+			nextBillingDate.setMonth(nextBillingDate.getMonth() + 2);
+		} else if (occurrence === "annually") {
+			nextBillingDate.setFullYear(nextBillingDate.getFullYear() + 1);
+		}
+		
+		console.log("Subscriptions PATCH - updating subscription id:", id);
+		console.log("Subscriptions PATCH - calculated next billing date:", nextBillingDate.toISOString().split('T')[0]);
+		
+		const { data, error } = await supabase
+			.from("subscriptions")
+			.update({
+				name,
+				amount,
+				occurrence,
+				start_date: startDate,
+				next_billing_date: nextBillingDate.toISOString().split('T')[0],
+				updated_at: new Date().toISOString(),
+			})
+			.eq("id", id)
+			.eq("user_id", user.id)
+			.select("id")
+			.single();
+
+		if (error) {
+			console.log("Subscriptions PATCH - database error:", error);
+			throw error;
+		}
+		console.log("Subscriptions PATCH - success, updated id:", data?.id);
+		return NextResponse.json({ ok: true, id: data?.id ?? null });
+	} catch (error) {
+		console.log("Subscriptions PATCH - caught error:", error);
+		return NextResponse.json({ error: "Invalid request" }, { status: 400 });
+	}
+}
+
 export async function DELETE(req: NextRequest) {
 	try {
 		const { searchParams } = new URL(req.url);

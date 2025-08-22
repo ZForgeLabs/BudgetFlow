@@ -42,6 +42,13 @@ export default function DashboardPage() {
   const [subStartDate, setSubStartDate] = useState("");
   const [userName, setUserName] = useState("");
   const [showAllSubscriptions, setShowAllSubscriptions] = useState(false);
+  
+  // Edit subscription state
+  const [editingSub, setEditingSub] = useState<string | null>(null);
+  const [editSubName, setEditSubName] = useState("");
+  const [editSubAmount, setEditSubAmount] = useState<number | "">("");
+  const [editSubOccurrence, setEditSubOccurrence] = useState<"monthly" | "bi-monthly" | "annually">("monthly");
+  const [editSubStartDate, setEditSubStartDate] = useState("");
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => setIsLoggedIn(!!session));
@@ -346,54 +353,164 @@ export default function DashboardPage() {
                 {/* Show first 4 subscriptions always, or all if expanded */}
                 {(showAllSubscriptions ? subs : subs.slice(0, 4)).map((s) => (
                   <div key={s.id} className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center space-x-3 mb-2">
-                          <div className="p-2 rounded-lg bg-white/20">
-                            <CreditCard className="h-4 w-4" />
+                    {editingSub === s.id ? (
+                      // Edit mode
+                      <div className="space-y-3">
+                        <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+                          <Input
+                            placeholder="Name (e.g., Netflix)"
+                            value={editSubName}
+                            onChange={(e) => setEditSubName(e.target.value)}
+                            className="bg-white/90 text-gray-900 placeholder-gray-600 border-white/30"
+                          />
+                          <div className="relative">
+                            <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-600">$</span>
+                            <Input
+                              type="number"
+                              placeholder="0"
+                              value={editSubAmount}
+                              onChange={(e) => setEditSubAmount(e.target.value === "" ? "" : Number(e.target.value))}
+                              className="pl-8 bg-white/90 text-gray-900 placeholder-gray-600 border-white/30"
+                            />
                           </div>
-                          <div>
-                            <h4 className="font-semibold text-white">{s.name}</h4>
-                            <p className="text-orange-100 text-sm">${Number(s.amount).toFixed(2)}</p>
-                          </div>
+                          <Select value={editSubOccurrence} onValueChange={(v) => setEditSubOccurrence(v as any)}>
+                            <SelectTrigger className="bg-white/90 text-gray-900 border-white/30">
+                              <SelectValue placeholder="Occurrence" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="monthly">Monthly</SelectItem>
+                              <SelectItem value="bi-monthly">Bi-monthly</SelectItem>
+                              <SelectItem value="annually">Annually</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <Input 
+                            type="date" 
+                            value={editSubStartDate} 
+                            onChange={(e) => setEditSubStartDate(e.target.value)}
+                            className="bg-white/90 text-gray-900 border-white/30"
+                          />
                         </div>
-                        <div className="text-orange-100 text-xs space-y-1">
-                          <div className="flex items-center space-x-2">
-                            <Calendar className="h-3 w-3" />
-                            <span>Started: {new Date(s.start_date).toLocaleDateString()}</span>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <DollarSign className="h-3 w-3" />
-                            <span>Next Payment: {s.next_billing_date ? new Date(s.next_billing_date).toLocaleDateString() : 'N/A'}</span>
-                          </div>
+                        <div className="flex gap-2 justify-end">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="border-white/30 text-black bg-white/90 hover:bg-white"
+                            onClick={() => {
+                              setEditingSub(null);
+                              setEditSubName("");
+                              setEditSubAmount("");
+                              setEditSubOccurrence("monthly");
+                              setEditSubStartDate("");
+                            }}
+                          >
+                            Cancel
+                          </Button>
+                          <Button
+                            size="sm"
+                            className="bg-white text-orange-600 hover:bg-orange-50 font-semibold"
+                            onClick={async () => {
+                              if (!editSubName || editSubAmount === "" || !editSubOccurrence || !editSubStartDate) {
+                                return;
+                              }
+                              try {
+                                const payload = {
+                                  name: editSubName,
+                                  amount: Number(editSubAmount),
+                                  occurrence: editSubOccurrence,
+                                  startDate: editSubStartDate,
+                                };
+                                const res = await fetch(`/api/subscriptions?id=${s.id}`, {
+                                  method: "PATCH",
+                                  headers: { "Content-Type": "application/json" },
+                                  body: JSON.stringify(payload),
+                                });
+                                if (res.ok) {
+                                  const r2 = await fetch("/api/subscriptions", { cache: "no-store" });
+                                  const { items } = await r2.json();
+                                  setSubs(items);
+                                  setEditingSub(null);
+                                  setEditSubName("");
+                                  setEditSubAmount("");
+                                  setEditSubOccurrence("monthly");
+                                  setEditSubStartDate("");
+                                } else {
+                                  const errorText = await res.text();
+                                  console.error("Failed to update subscription:", errorText);
+                                }
+                              } catch (error) {
+                                console.error("Error updating subscription:", error);
+                              }
+                            }}
+                          >
+                            Save
+                          </Button>
                         </div>
                       </div>
-                      <div className="flex gap-2">
-                        <PaymentStatusButton
-                          subscriptionId={s.id}
-                          nextBillingDate={s.next_billing_date || s.start_date}
-                          lastPaidDate={s.last_paid_date}
-                          onPaymentUpdate={() => {
-                            // Refresh the subscriptions list
-                            fetch("/api/subscriptions", { cache: "no-store" })
-                              .then(res => res.json())
-                              .then(({ items }) => setSubs(items))
-                              .catch(error => console.error("Error refreshing subscriptions:", error));
-                          }}
-                        />
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="border-white/30 text-black bg-white/90 hover:bg-white"
-                          onClick={async () => {
-                            await fetch(`/api/subscriptions?id=${s.id}`, { method: "DELETE" });
-                            setSubs((prev) => prev.filter((x) => x.id !== s.id));
-                          }}
-                        >
-                          Delete
-                        </Button>
+                    ) : (
+                      // View mode
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center space-x-3 mb-2">
+                            <div className="p-2 rounded-lg bg-white/20">
+                              <CreditCard className="h-4 w-4" />
+                            </div>
+                            <div>
+                              <h4 className="font-semibold text-white">{s.name}</h4>
+                              <p className="text-orange-100 text-sm">${Number(s.amount).toFixed(2)}</p>
+                            </div>
+                          </div>
+                          <div className="text-orange-100 text-xs space-y-1">
+                            <div className="flex items-center space-x-2">
+                              <Calendar className="h-3 w-3" />
+                              <span>Started: {new Date(s.start_date).toLocaleDateString()}</span>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <DollarSign className="h-3 w-3" />
+                              <span>Next Payment: {s.next_billing_date ? new Date(s.next_billing_date).toLocaleDateString() : 'N/A'}</span>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                          <PaymentStatusButton
+                            subscriptionId={s.id}
+                            nextBillingDate={s.next_billing_date || s.start_date}
+                            lastPaidDate={s.last_paid_date}
+                            onPaymentUpdate={() => {
+                              // Refresh the subscriptions list
+                              fetch("/api/subscriptions", { cache: "no-store" })
+                                .then(res => res.json())
+                                .then(({ items }) => setSubs(items))
+                                .catch(error => console.error("Error refreshing subscriptions:", error));
+                            }}
+                          />
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="border-white/30 text-black bg-white/90 hover:bg-white"
+                            onClick={() => {
+                              setEditingSub(s.id);
+                              setEditSubName(s.name);
+                              setEditSubAmount(Number(s.amount));
+                              setEditSubOccurrence(s.occurrence);
+                              setEditSubStartDate(s.start_date);
+                            }}
+                          >
+                            Edit
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="border-white/30 text-black bg-white/90 hover:bg-white"
+                            onClick={async () => {
+                              await fetch(`/api/subscriptions?id=${s.id}`, { method: "DELETE" });
+                              setSubs((prev) => prev.filter((x) => x.id !== s.id));
+                            }}
+                          >
+                            Delete
+                          </Button>
+                        </div>
                       </div>
-                    </div>
+                    )}
                   </div>
                 ))}
 
