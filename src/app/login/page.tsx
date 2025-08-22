@@ -43,7 +43,7 @@ export default function LoginPage() {
           </h1>
           <p className="mt-4 text-lg text-gray-600 leading-relaxed">
             Plan your money with clarity. Track income, fixed expenses, savings goals,
-            and subscriptions—then visualize it instantly. Sign in to access your personal dashboard.
+            and subscriptions, then visualize it instantly. Sign in to access your personal dashboard.
           </p>
 
           <div className="mt-10 grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm text-gray-600">
