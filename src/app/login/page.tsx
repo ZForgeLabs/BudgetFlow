@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase/client";
 import { Icons } from "@/components/ui/icons";
 import CustomLoginForm from "@/components/auth/CustomLoginForm";
@@ -8,8 +8,17 @@ import CustomSignupForm from "@/components/auth/CustomSignupForm";
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [isSignup, setIsSignup] = useState(false);
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+
+  useEffect(() => {
+    // Check if user wants to sign up from URL parameter
+    const signupParam = searchParams.get('signup');
+    if (signupParam === 'true') {
+      setIsSignup(true);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     let mounted = true;

@@ -8,8 +8,8 @@ import { Toaster } from "@/components/ui/toaster";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Tempo - Modern SaaS Starter",
-  description: "A modern full-stack starter template powered by Next.js",
+  title: "BudgetFlow - Smart Budgeting & Financial Management",
+  description: "Take control of your finances with intelligent budgeting, real-time tracking, and personalized insights. Build wealth, reduce stress, and achieve your financial goals faster.",
 };
 
 export default function RootLayout({
