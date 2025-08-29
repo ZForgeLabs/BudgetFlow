@@ -1,12 +1,13 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase/client";
 import { Icons } from "@/components/ui/icons";
 import CustomLoginForm from "@/components/auth/CustomLoginForm";
 import CustomSignupForm from "@/components/auth/CustomSignupForm";
 
-export default function LoginPage() {
+// Separate component to handle search params
+function LoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isSignup, setIsSignup] = useState(false);
@@ -125,5 +126,34 @@ export default function LoginPage() {
         </section>
       </div>
     </main>
+  );
+}
+
+// Loading fallback component
+function LoginLoading() {
+  return (
+    <main className="min-h-screen relative overflow-hidden bg-gradient-to-b from-blue-50 to-white">
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute -top-24 -right-24 h-72 w-72 rounded-full bg-blue-200 blur-3xl opacity-40" />
+        <div className="absolute -bottom-24 -left-24 h-72 w-72 rounded-full bg-emerald-200 blur-3xl opacity-40" />
+      </div>
+      <div className="relative mx-auto max-w-7xl px-6 py-16 lg:py-24 flex items-center justify-center">
+        <div className="text-center">
+          <div className="inline-flex items-center gap-2 text-blue-700 font-semibold">
+            <Icons.react className="h-6 w-6" />
+            <span>Loading...</span>
+          </div>
+        </div>
+      </div>
+    </main>
+  );
+}
+
+// Main page component with Suspense boundary
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<LoginLoading />}>
+      <LoginContent />
+    </Suspense>
   );
 }
