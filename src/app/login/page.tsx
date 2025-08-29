@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
 import { supabase } from "@/lib/supabase/client";
 import { Icons } from "@/components/ui/icons";
 import CustomLoginForm from "@/components/auth/CustomLoginForm";
@@ -48,9 +49,11 @@ function LoginContent() {
             <Icons.react className="h-6 w-6" />
             <span>Welcome to</span>
           </div>
-          <h1 className="mt-3 text-4xl md:text-5xl font-extrabold tracking-tight text-gray-900">
-            BudgetFlow
-          </h1>
+          <Link href="/" className="block">
+            <h1 className="mt-3 text-4xl md:text-5xl font-extrabold tracking-tight text-gray-900 hover:text-blue-600 transition-colors cursor-pointer">
+              BudgetFlow
+            </h1>
+          </Link>
           <p className="mt-4 text-lg text-gray-600 leading-relaxed">
             Plan your money with clarity. Track income, fixed expenses, savings goals,
             and subscriptions, then visualize it instantly. Sign in to access your personal dashboard.
