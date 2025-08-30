@@ -1,12 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { cookies } from "next/headers";
-import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
+import { createRouteHandlerClient } from "@/lib/supabase/server";
 
 const allowed = new Set(["monthly", "bi-monthly", "annually"]);
 
 export async function GET() {
 	try {
-		const supabase = createRouteHandlerClient({ cookies });
+		const supabase = createRouteHandlerClient();
 		const { data: { user }, error: authError } = await supabase.auth.getUser();
 		
 		if (authError) {
@@ -52,7 +51,7 @@ export async function POST(req: NextRequest) {
 			return NextResponse.json({ error: "Invalid occurrence" }, { status: 400 });
 		}
 
-		const supabase = createRouteHandlerClient({ cookies });
+		const supabase = createRouteHandlerClient();
 		const { data: { user }, error: authError } = await supabase.auth.getUser();
 		
 		if (authError) {
@@ -124,7 +123,7 @@ export async function PATCH(req: NextRequest) {
 			return NextResponse.json({ error: "Invalid occurrence" }, { status: 400 });
 		}
 
-		const supabase = createRouteHandlerClient({ cookies });
+		const supabase = createRouteHandlerClient();
 		const { data: { user }, error: authError } = await supabase.auth.getUser();
 		
 		if (authError) {
@@ -185,7 +184,7 @@ export async function DELETE(req: NextRequest) {
 		const id = searchParams.get("id");
 		if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
 
-		const supabase = createRouteHandlerClient({ cookies });
+		const supabase = createRouteHandlerClient();
 		const { data: { user } } = await supabase.auth.getUser();
 		if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 

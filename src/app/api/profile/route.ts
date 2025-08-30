@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { cookies } from "next/headers";
-import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
+import { createRouteHandlerClient } from "@/lib/supabase/server";
 
 export async function GET() {
 	try {
-		const supabase = createRouteHandlerClient({ cookies });
+		const supabase = createRouteHandlerClient();
 		const {
 			data: { user },
 		} = await supabase.auth.getUser();
@@ -36,7 +35,7 @@ export async function POST(req: NextRequest) {
 		if (monthlyIncome === undefined || monthlyIncome === null) {
 			return NextResponse.json({ error: "Missing monthlyIncome" }, { status: 400 });
 		}
-		const supabase = createRouteHandlerClient({ cookies });
+		const supabase = createRouteHandlerClient();
 		const {
 			data: { user },
 		} = await supabase.auth.getUser();

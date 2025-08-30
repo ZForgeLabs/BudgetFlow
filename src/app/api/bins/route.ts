@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { cookies } from "next/headers";
-import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
+import { createRouteHandlerClient } from "@/lib/supabase/server";
 
 export async function GET() {
 	try {
-		const supabase = createRouteHandlerClient({ cookies });
+		const supabase = createRouteHandlerClient();
 		const { data: { user } } = await supabase.auth.getUser();
 		if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 		const { data, error } = await supabase
@@ -25,7 +24,7 @@ export async function POST(req: NextRequest) {
 		if (!name || goalAmount === undefined) {
 			return NextResponse.json({ error: "Missing fields" }, { status: 400 });
 		}
-		const supabase = createRouteHandlerClient({ cookies });
+		const supabase = createRouteHandlerClient();
 		const { data: { user } } = await supabase.auth.getUser();
 		if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 		const { data, error } = await supabase
@@ -48,7 +47,7 @@ export async function PATCH(req: NextRequest) {
 		const { id, currentAmount, monthlyAllocation } = body;
 		if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
 
-		const supabase = createRouteHandlerClient({ cookies });
+		const supabase = createRouteHandlerClient();
 		const { data: { user } } = await supabase.auth.getUser();
 		if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
@@ -88,7 +87,7 @@ export async function DELETE(req: NextRequest) {
 		const { searchParams } = new URL(req.url);
 		const id = searchParams.get("id");
 		if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
-		const supabase = createRouteHandlerClient({ cookies });
+		const supabase = createRouteHandlerClient();
 		const { data: { user } } = await supabase.auth.getUser();
 		if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 		const { error } = await supabase
