@@ -3,6 +3,9 @@ import { stripe } from '@/lib/stripe';
 import { createRouteHandlerClient } from '@/lib/supabase/server';
 import { headers } from 'next/headers';
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: NextRequest) {
   const body = await request.text();
   const signature = headers().get('stripe-signature')!;
