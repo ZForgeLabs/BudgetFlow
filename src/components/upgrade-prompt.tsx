@@ -1,22 +1,16 @@
 "use client";
 
-import { useState } from 'react';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Crown, Zap, CheckCircle } from 'lucide-react';
 
 interface UpgradePromptProps {
 	feature: 'expenses' | 'subscriptions' | 'savingsBins' | 'graphs';
 	currentCount?: number;
 	limit?: number;
-	onUpgrade: () => void;
 	className?: string;
 }
 
-export function UpgradePrompt({ feature, currentCount, limit, onUpgrade, className = '' }: UpgradePromptProps) {
-	const [isUpgrading, setIsUpgrading] = useState(false);
-
+export function UpgradePrompt({ feature, currentCount, limit, className = '' }: UpgradePromptProps) {
 	const featureInfo = {
 		expenses: {
 			title: 'Expense Limit Reached',
@@ -31,7 +25,7 @@ export function UpgradePrompt({ feature, currentCount, limit, onUpgrade, classNa
 		savingsBins: {
 			title: 'Savings Goal Limit Reached',
 			description: `You've reached your limit of ${limit} savings goals. Upgrade to Pro for unlimited goal tracking.`,
-			icon: '��'
+			icon: ''
 		},
 		graphs: {
 			title: 'Graphs & Analytics',
@@ -41,15 +35,6 @@ export function UpgradePrompt({ feature, currentCount, limit, onUpgrade, classNa
 	};
 
 	const info = featureInfo[feature];
-
-	const handleUpgrade = async () => {
-		setIsUpgrading(true);
-		try {
-			await onUpgrade();
-		} finally {
-			setIsUpgrading(false);
-		}
-	};
 
 	return (
 		<Card className={`border-0 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 shadow-lg hover:shadow-xl transition-all duration-300 max-w-md mx-auto ${className}`}>
@@ -72,51 +57,6 @@ export function UpgradePrompt({ feature, currentCount, limit, onUpgrade, classNa
 						</Badge>
 					</div>
 				)}
-				
-				<div className="space-y-3 bg-white/60 rounded-lg p-4 border border-blue-100/50">
-					<div className="flex items-center gap-3 text-sm text-gray-700">
-						<div className="p-1.5 rounded-full bg-green-100">
-							<CheckCircle className="h-3.5 w-3.5 text-green-600" />
-						</div>
-						<span className="font-medium">Unlimited {feature === 'expenses' ? 'expenses' : feature === 'subscriptions' ? 'subscriptions' : 'savings goals'}</span>
-					</div>
-					<div className="flex items-center gap-3 text-sm text-gray-700">
-						<div className="p-1.5 rounded-full bg-green-100">
-							<CheckCircle className="h-3.5 w-3.5 text-green-600" />
-						</div>
-						<span className="font-medium">Advanced graphs & analytics</span>
-					</div>
-					<div className="flex items-center gap-3 text-sm text-gray-700">
-						<div className="p-1.5 rounded-full bg-green-100">
-							<CheckCircle className="h-3.5 w-3.5 text-green-600" />
-						</div>
-						<span className="font-medium">Priority support</span>
-					</div>
-				</div>
-
-				<div className="text-center">
-					<Button 
-						onClick={handleUpgrade}
-						disabled={isUpgrading}
-						className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold px-6 py-3 text-sm rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-0.5"
-					>
-						{isUpgrading ? (
-							<>
-								<Zap className="h-4 w-4 mr-2 animate-pulse" />
-								Upgrading...
-							</>
-						) : (
-							<>
-								<Crown className="h-4 w-4 mr-2" />
-								Upgrade to Pro - $9.99/month
-							</>
-						)}
-					</Button>
-				</div>
-
-				<div className="text-center text-xs text-gray-500 bg-white/40 rounded-lg py-2">
-					✨ Cancel anytime • No setup fees
-				</div>
 			</CardContent>
 		</Card>
 	);
