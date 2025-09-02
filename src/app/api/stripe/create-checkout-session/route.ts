@@ -13,7 +13,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Configuration error' }, { status: 500 });
     }
 
-    const supabase = createRouteHandlerClient();
+    let supabase;
+    try {
+      supabase = createRouteHandlerClient();
+    } catch (error) {
+      console.error('Failed to create Supabase client:', error);
+      return NextResponse.json({ error: 'Configuration error' }, { status: 500 });
+    }
+
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     
     if (authError || !user) {
