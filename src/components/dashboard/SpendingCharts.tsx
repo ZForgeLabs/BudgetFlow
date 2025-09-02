@@ -20,6 +20,8 @@ import {
 	Area,
 	AreaChart,
 } from "recharts";
+import { useFeatureLimits } from "@/contexts/FeatureLimitsContext";
+import { UpgradePrompt } from "@/components/upgrade-prompt";
 
 type SpendingChartsProps = {
 	monthlyIncome: number;
@@ -87,6 +89,23 @@ export default function SpendingCharts({
 	totalSavings,
 	totalSaved,
 }: SpendingChartsProps) {
+	const { canAccessGraphs, loading } = useFeatureLimits();
+	
+	// Show upgrade prompt if user can't access graphs
+	if (!loading && !canAccessGraphs) {
+		return (
+			<div className="bg-gradient-to-br from-white to-gray-50 border border-gray-200 rounded-2xl p-6 shadow-lg">
+				<UpgradePrompt 
+					feature="graphs"
+					onUpgrade={() => {
+						// TODO: Implement Stripe checkout
+						console.log('Upgrade to Pro clicked');
+					}}
+				/>
+			</div>
+		);
+	}
+
 	const totalOutflow = totalFixedExpenses + totalSubscriptionsMonthly + totalSavings + totalSaved;
 	const leftOver = Math.max(0, monthlyIncome - totalOutflow);
 

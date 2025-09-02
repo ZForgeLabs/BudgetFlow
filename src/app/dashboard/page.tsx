@@ -12,6 +12,10 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@
 import SpendingCharts from "@/components/dashboard/SpendingCharts";
 import PaymentStatusButton from "@/components/subscriptions/PaymentStatusButton";
 import { CreditCard, Calendar, DollarSign, ChevronDown, ChevronUp } from "lucide-react";
+import { SubscriptionStatus } from "@/components/subscription-status";
+import { useFeatureLimits } from "@/contexts/FeatureLimitsContext";
+import { UpgradeModal } from "@/components/upgrade-modal";
+import { UpgradePrompt } from "@/components/upgrade-prompt";
 
 interface Expense {
   id: string;
@@ -28,12 +32,14 @@ interface SavingsBin {
 }
 
 export default function DashboardPage() {
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [monthlyIncome, setMonthlyIncome] = useState(5000);
   const [fixedExpenses, setFixedExpenses] = useState<Expense[]>([]);
   const [savingsBins, setSavingsBins] = useState<SavingsBin[]>([]);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const router = useRouter();
   const [signingOut, setSigningOut] = useState(false);
+  const { refreshLimits, featureLimits, canAddSubscription } = useFeatureLimits();
 
   const [subs, setSubs] = useState<any[]>([]);
   const [subName, setSubName] = useState("");
@@ -89,25 +95,19 @@ export default function DashboardPage() {
       }
       // subscriptions
       const resSubs = await fetch("/api/subscriptions", { cache: "no-store" });
-      console.log("Subscriptions API response:", resSubs.status);
       if (resSubs.ok) {
         const { items } = await resSubs.json();
-        console.log("Setting subscriptions:", items);
         setSubs(items);
       } else {
         console.error("Failed to load subscriptions:", await resSubs.text());
       }
+      
+      // Feature limits are handled by the context, no need to refresh here
     };
     if (isLoggedIn) loadAll();
   }, [isLoggedIn]);
 
-  // Debug: Track savingsBins changes
-  useEffect(() => {
-    console.log('SavingsBins state changed:', savingsBins);
-  }, [savingsBins]);
-
   const refreshDashboardData = async () => {
-    console.log('Refreshing dashboard data...');
     // Refresh the bins data
     const binsRes = await fetch("/api/bins", { cache: "no-store" });
     if (binsRes.ok) {
@@ -122,6 +122,9 @@ export default function DashboardPage() {
         })),
       );
     }
+    
+    // Refresh feature limits to keep counts in sync
+    refreshLimits();
   };
 
   const totalExpenses = fixedExpenses.reduce((sum, e) => sum + e.amount, 0);
@@ -129,17 +132,6 @@ export default function DashboardPage() {
   const totalSaved = savingsBins.reduce((sum, b) => sum + b.currentAmount, 0);
   const remainingBalance = monthlyIncome - totalExpenses - totalSavings - totalSaved;
   const availableForSavings = monthlyIncome - totalExpenses - totalSaved;
-
-  // Debug logging
-  console.log('Dashboard calculations:', {
-    monthlyIncome,
-    totalExpenses,
-    totalSavings,
-    totalSaved,
-    remainingBalance,
-    availableForSavings,
-    savingsBinsCount: savingsBins.length
-  });
 
   const processScheduledTransfers = async () => {
     try {
@@ -236,11 +228,16 @@ export default function DashboardPage() {
           remainingBalance={remainingBalance - totalSubscriptionsMonthly}
         />
 
+        <SubscriptionStatus />
+
         <IncomeExpenseForm
           monthlyIncome={monthlyIncome}
           fixedExpenses={fixedExpenses}
           onIncomeChange={setMonthlyIncome}
           onExpensesChange={setFixedExpenses}
+          onExpenseAdded={async () => {
+            await refreshLimits();
+          }}
         />
 
         <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl p-6 text-white shadow-lg hover:shadow-xl transition-all duration-300">
@@ -260,86 +257,107 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20 mb-4">
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
-              <Input
-                placeholder="Name (e.g., Netflix)"
-                value={subName}
-                onChange={(e) => setSubName(e.target.value)}
-                className="bg-white/90 text-gray-900 placeholder-gray-600 border-white/30"
-              />
-              <div className="relative">
-                <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-600">$</span>
+          {/* Add New Subscription or Upgrade Prompt */}
+          {canAddSubscription ? (
+            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20 mb-4">
+              <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
                 <Input
-                  type="number"
-                  placeholder="0"
-                  value={subAmount}
-                  onChange={(e) => setSubAmount(e.target.value === "" ? "" : Number(e.target.value))}
-                  className="pl-8 bg-white/90 text-gray-900 placeholder-gray-600 border-white/30"
+                  placeholder="Name (e.g., Netflix)"
+                  value={subName}
+                  onChange={(e) => setSubName(e.target.value)}
+                  className="bg-white/90 text-gray-900 placeholder-gray-600 border-white/30"
                 />
-              </div>
-              <Select value={subOccurrence} onValueChange={(v) => setSubOccurrence(v as any)}>
-                <SelectTrigger className="bg-white/90 text-gray-900 border-white/30">
-                  <SelectValue placeholder="Occurrence" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="monthly">Monthly</SelectItem>
-                  <SelectItem value="bi-monthly">Bi-monthly</SelectItem>
-                  <SelectItem value="annually">Annually</SelectItem>
-                </SelectContent>
-              </Select>
-              <Input 
-                type="date" 
-                value={subStartDate} 
-                onChange={(e) => setSubStartDate(e.target.value)}
-                className="bg-white/90 text-gray-900 border-white/30"
-              />
-              <Button
-                className="bg-white text-orange-600 hover:bg-orange-50 font-semibold"
-                onClick={async () => {
-                  console.log("Adding subscription:", { subName, subAmount, subOccurrence, subStartDate });
-                  if (!subName || subAmount === "" || !subOccurrence || !subStartDate) {
-                    console.log("Validation failed - missing fields");
-                    return;
-                  }
-                  try {
-                    const payload = {
-                      name: subName,
-                      amount: Number(subAmount),
-                      occurrence: subOccurrence,
-                      startDate: subStartDate,
-                    };
-                    console.log("Sending payload:", payload);
-                    const res = await fetch("/api/subscriptions", {
-                      method: "POST",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify(payload),
-                    });
-                    console.log("Response status:", res.status);
-                    if (res.ok) {
-                      const data = await res.json();
-                      console.log("Response data:", data);
-                      const r2 = await fetch("/api/subscriptions", { cache: "no-store" });
-                      const { items } = await r2.json();
-                      console.log("Updated subscriptions:", items);
-                      setSubs(items);
-                      setSubName("");
-                      setSubAmount("");
-                      setSubOccurrence("monthly");
-                      setSubStartDate("");
-                    } else {
-                      const errorText = await res.text();
-                      console.error("Failed to add subscription:", errorText);
+                <div className="relative">
+                  <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-600">$</span>
+                  <Input
+                    type="number"
+                    placeholder="0"
+                    value={subAmount}
+                    onChange={(e) => setSubAmount(e.target.value === "" ? "" : Number(e.target.value))}
+                    className="pl-8 bg-white/90 text-gray-900 placeholder-gray-600 border-white/30"
+                  />
+                </div>
+                <Select value={subOccurrence} onValueChange={(v) => setSubOccurrence(v as any)}>
+                  <SelectTrigger className="bg-white/90 text-gray-900 border-white/30">
+                    <SelectValue placeholder="Occurrence" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="monthly">Monthly</SelectItem>
+                    <SelectItem value="bi-monthly">Bi-monthly</SelectItem>
+                    <SelectItem value="annually">Annually</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Input 
+                  type="date" 
+                  value={subStartDate} 
+                  onChange={(e) => setSubStartDate(e.target.value)}
+                  className="bg-white/90 text-gray-900 border-white/30"
+                />
+                <Button
+                  className="bg-white text-orange-600 hover:bg-orange-50 font-semibold"
+                  onClick={async () => {
+                    if (!subName || subAmount === "" || !subOccurrence || !subStartDate) {
+                      return;
                     }
-                  } catch (error) {
-                    console.error("Error adding subscription:", error);
-                  }
-                }}
-              >
-                Add
-              </Button>
+                    
+                    // Check feature limits before adding using context data
+                    if (!canAddSubscription) {
+                      return;
+                    }
+                    
+                    try {
+                      const payload = {
+                        name: subName,
+                        amount: Number(subAmount),
+                        occurrence: subOccurrence,
+                        startDate: subStartDate,
+                      };
+                      const res = await fetch("/api/subscriptions", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(payload),
+                      });
+                      if (res.ok) {
+                        const data = await res.json();
+                        const r2 = await fetch("/api/subscriptions", { cache: "no-store" });
+                        const { items } = await r2.json();
+                        setSubs(items);
+                        setSubName("");
+                        setSubAmount("");
+                        setSubOccurrence("monthly");
+                        setSubStartDate("");
+                        
+                        // Add a small delay to ensure database operation completes
+                        setTimeout(() => {
+                          // Refresh feature limits after adding
+                          refreshLimits();
+                        }, 100);
+                      } else {
+                        const errorText = await res.text();
+                        console.error("Failed to add subscription:", errorText);
+                      }
+                    } catch (error) {
+                      console.error("Error adding subscription:", error);
+                    }
+                  }}
+                >
+                  Add Subscription
+                </Button>
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20 mb-4">
+              <UpgradePrompt 
+                feature="subscriptions"
+                currentCount={featureLimits?.usage.subscriptions}
+                limit={5}
+                onUpgrade={() => {
+                  // TODO: Implement Stripe checkout
+                  console.log('Upgrade to Pro clicked');
+                }}
+              />
+            </div>
+          )}
 
           <div className="space-y-3">
             {subs.length === 0 ? (
@@ -433,6 +451,9 @@ export default function DashboardPage() {
                                   setEditSubAmount("");
                                   setEditSubOccurrence("monthly");
                                   setEditSubStartDate("");
+                                  
+                                  // Refresh feature limits after editing
+                                  refreshLimits();
                                 } else {
                                   const errorText = await res.text();
                                   console.error("Failed to update subscription:", errorText);
@@ -481,6 +502,9 @@ export default function DashboardPage() {
                                 .then(res => res.json())
                                 .then(({ items }) => setSubs(items))
                                 .catch(error => console.error("Error refreshing subscriptions:", error));
+                              
+                              // Refresh feature limits after payment update
+                              refreshLimits();
                             }}
                           />
                           <Button
@@ -504,6 +528,12 @@ export default function DashboardPage() {
                             onClick={async () => {
                               await fetch(`/api/subscriptions?id=${s.id}`, { method: "DELETE" });
                               setSubs((prev) => prev.filter((x) => x.id !== s.id));
+                              
+                              // Add a small delay to ensure database operation completes
+                              setTimeout(async () => {
+                                // Refresh feature limits after deleting
+                                await refreshLimits();
+                              }, 100);
                             }}
                           >
                             Delete
@@ -555,6 +585,9 @@ export default function DashboardPage() {
           availableAmount={availableForSavings}
           onBinsChange={setSavingsBins}
           onRefresh={refreshDashboardData}
+          onBinAdded={async () => {
+            await refreshLimits();
+          }}
         />
 
         {/* Feedback Button */}
@@ -573,6 +606,13 @@ export default function DashboardPage() {
           </Button>
         </div>
       </div>
+
+      {/* Upgrade Modal */}
+      <UpgradeModal 
+        isOpen={showUpgradeModal}
+        onClose={() => setShowUpgradeModal(false)}
+        featureType="subscriptions"
+      />
     </main>
   );
 }

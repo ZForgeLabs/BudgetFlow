@@ -6,6 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Plus, Trash2, DollarSign, TrendingUp, TrendingDown, ChevronDown, ChevronUp } from "lucide-react";
+import { useFeatureLimits } from "@/contexts/FeatureLimitsContext";
+import { UpgradePrompt } from "@/components/upgrade-prompt";
+
 
 interface Expense {
   id: string;
@@ -18,6 +21,7 @@ interface IncomeExpenseFormProps {
   fixedExpenses?: Expense[];
   onIncomeChange?: (income: number) => void;
   onExpensesChange?: (expenses: Expense[]) => void;
+  onExpenseAdded?: () => void; // Callback to refresh feature limits
 }
 
 const IncomeExpenseForm = ({
@@ -30,22 +34,21 @@ const IncomeExpenseForm = ({
   ],
   onIncomeChange = () => {},
   onExpensesChange = () => {},
+  onExpenseAdded = () => {},
 }: IncomeExpenseFormProps) => {
-  const [income, setIncome] = useState(monthlyIncome.toString());
   const [isEditingIncome, setIsEditingIncome] = useState(false);
+  const [income, setIncome] = useState(monthlyIncome.toString());
   const [expenses, setExpenses] = useState<Expense[]>(fixedExpenses);
   const [newExpenseName, setNewExpenseName] = useState("");
   const [newExpenseAmount, setNewExpenseAmount] = useState("");
   const [showAllExpenses, setShowAllExpenses] = useState(false);
 
-  // Update internal state when props change
+  // Update internal state when props change (only when the array length changes to prevent loops)
   useEffect(() => {
-    setExpenses(fixedExpenses);
-  }, [fixedExpenses]);
-
-  useEffect(() => {
-    setIncome(monthlyIncome.toString());
-  }, [monthlyIncome]);
+    if (fixedExpenses.length !== expenses.length) {
+      setExpenses(fixedExpenses);
+    }
+  }, [fixedExpenses.length, expenses.length]);
 
   const handleIncomeChange = (value: string) => {
     setIncome(value);
@@ -76,7 +79,15 @@ const IncomeExpenseForm = ({
     setIsEditingIncome(false);
   };
 
+  const { canAddExpense, featureLimits, refreshLimits } = useFeatureLimits();
+
   const addExpense = async () => {
+    
+    // Check feature limits before adding using context data
+    if (!canAddExpense) {
+      return;
+    }
+    
     if (newExpenseName.trim() && newExpenseAmount) {
       const newExpense: Expense = {
         id: Date.now().toString(),
@@ -103,6 +114,15 @@ const IncomeExpenseForm = ({
       }
       setNewExpenseName("");
       setNewExpenseAmount("");
+      
+      // Refresh local feature limits immediately
+      await refreshLimits();
+      
+      // Add a small delay for parent callback
+      setTimeout(async () => {
+        // Notify parent to refresh feature limits
+        await onExpenseAdded();
+      }, 100);
     }
   };
 
@@ -115,6 +135,15 @@ const IncomeExpenseForm = ({
     } catch (e) {
       // noop
     }
+    
+    // Refresh local feature limits immediately
+    await refreshLimits();
+    
+    // Add a small delay for parent callback
+    setTimeout(async () => {
+      // Notify parent to refresh feature limits
+      await onExpenseAdded();
+    }, 100);
   };
 
   const updateExpense = async (
@@ -145,6 +174,9 @@ const IncomeExpenseForm = ({
     } catch (e) {
       // noop
     }
+    
+    // Notify parent to refresh feature limits
+    onExpenseAdded();
   };
 
   return (
@@ -295,34 +327,48 @@ const IncomeExpenseForm = ({
             )}
           </div>
 
-          {/* Add New Expense */}
-          <div className="border-t border-white/20 pt-4">
-            <div className="flex items-center gap-3">
-              <Input
-                placeholder="New expense name"
-                value={newExpenseName}
-                onChange={(e) => setNewExpenseName(e.target.value)}
-                className="flex-1 bg-white text-gray-900"
-              />
-              <div className="relative w-28">
-                <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-600">$</span>
+          {/* Add New Expense or Upgrade Prompt */}
+          {canAddExpense ? (
+            <div className="border-t border-white/20 pt-4">
+              <div className="flex items-center gap-3">
                 <Input
-                  type="number"
-                  placeholder="0"
-                  value={newExpenseAmount}
-                  onChange={(e) => setNewExpenseAmount(e.target.value)}
-                  className="w-28 pl-8 bg-white text-gray-900"
+                  placeholder="New expense name"
+                  value={newExpenseName}
+                  onChange={(e) => setNewExpenseName(e.target.value)}
+                  className="flex-1 bg-white text-gray-900"
                 />
+                <div className="relative w-28">
+                  <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-600">$</span>
+                  <Input
+                    type="number"
+                    placeholder="0"
+                    value={newExpenseAmount}
+                    onChange={(e) => setNewExpenseAmount(e.target.value)}
+                    className="w-28 pl-8 bg-white text-gray-900"
+                  />
+                </div>
+                <Button
+                  onClick={addExpense}
+                  size="icon"
+                  className="flex-shrink-0 bg-white text-red-600 hover:bg-red-50"
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
               </div>
-              <Button
-                onClick={addExpense}
-                size="icon"
-                className="flex-shrink-0 bg-white text-red-600 hover:bg-red-50"
-              >
-                <Plus className="h-4 w-4" />
-              </Button>
             </div>
-          </div>
+          ) : (
+            <div className="border-t border-white/20 pt-4">
+              <UpgradePrompt 
+                feature="expenses"
+                currentCount={featureLimits?.usage.expenses}
+                limit={5}
+                onUpgrade={() => {
+                  // TODO: Implement Stripe checkout
+                  console.log('Upgrade to Pro clicked');
+				}}
+              />
+            </div>
+          )}
 
           {/* Total Section */}
           <div className="border-t border-white/20 pt-4">
@@ -335,6 +381,8 @@ const IncomeExpenseForm = ({
           </div>
         </div>
       </div>
+
+
     </div>
   );
 };

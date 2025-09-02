@@ -9,6 +9,9 @@ import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
 import { Plus, Trash2, Target, Settings2, PiggyBank, Calendar, DollarSign } from "lucide-react";
+import { useFeatureLimits } from "@/contexts/FeatureLimitsContext";
+
+import { UpgradePrompt } from "@/components/upgrade-prompt";
 
 interface SavingsBin {
   id: string;
@@ -27,6 +30,7 @@ interface SavingsBinsProps {
   availableAmount?: number;
   onBinsChange?: (bins: SavingsBin[]) => void;
   onRefresh?: () => void;
+  onBinAdded?: () => void; // Callback to refresh feature limits
 }
 
 const frequencyOptions = [
@@ -148,16 +152,19 @@ const SavingsBins = ({
   availableAmount = 1600,
   onBinsChange = () => {},
   onRefresh = () => {},
+  onBinAdded = () => {},
 }: SavingsBinsProps) => {
   const { toast } = useToast();
   const [bins, setBins] = useState<SavingsBin[]>(savingsBins);
   const [newBinName, setNewBinName] = useState("");
   const [newBinGoal, setNewBinGoal] = useState("");
 
-  // Update internal state when props change
+  // Update internal state when props change (only when the array length changes to prevent loops)
   useEffect(() => {
-    setBins(savingsBins);
-  }, [savingsBins]);
+    if (savingsBins.length !== bins.length) {
+      setBins(savingsBins);
+    }
+  }, [savingsBins.length, bins.length]);
 
   // UI state
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
@@ -169,7 +176,14 @@ const SavingsBins = ({
   );
   const remainingAmount = availableAmount - totalAllocated;
 
+  const { canAddSavingsBin, featureLimits } = useFeatureLimits();
+
   const addBin = async () => {
+    // Check feature limits before adding using context data
+    if (!canAddSavingsBin) {
+      return;
+    }
+    
     if (newBinName.trim() && newBinGoal) {
       const newBin: SavingsBin = {
         id: Date.now().toString(),
@@ -199,6 +213,12 @@ const SavingsBins = ({
       } catch (e) {}
       setNewBinName("");
       setNewBinGoal("");
+      
+      // Add a small delay to ensure database operation completes
+      setTimeout(async () => {
+        // Notify parent to refresh feature limits
+        await onBinAdded();
+      }, 100);
     }
   };
 
@@ -207,10 +227,15 @@ const SavingsBins = ({
     setBins(updatedBins);
     onBinsChange(updatedBins);
     try { await fetch(`/api/bins?id=${id}`, { method: "DELETE" }); } catch (e) {}
+    
+    // Add a small delay to ensure database operation completes
+    setTimeout(async () => {
+      // Notify parent to refresh feature limits
+      await onBinAdded();
+    }, 100);
   };
 
   const updateBinAllocation = async (id: string, allocation: number) => {
-    console.log('Updating bin allocation:', { id, allocation });
     const updatedBins = bins.map((bin) =>
       bin.id === id ? { ...bin, monthlyAllocation: allocation } : bin,
     );
@@ -238,7 +263,6 @@ const SavingsBins = ({
   const addToSavedAmount = async (id: string) => {
     const raw = savedInputs[id] ?? "";
     const delta = parseFloat(raw) || 0;
-    console.log('addToSavedAmount called:', { id, raw, delta });
     
     if (delta <= 0) {
       toast({ title: "Enter a positive amount" });
@@ -252,27 +276,22 @@ const SavingsBins = ({
     }
     
     const newAmount = bin.currentAmount + delta;
-    console.log('Calculated new amount:', { currentAmount: bin.currentAmount, delta, newAmount });
     
     // Update local state immediately for better UX
     const updatedBins = bins.map((bin) =>
       bin.id === id ? { ...bin, currentAmount: newAmount } : bin,
     );
     setBins(updatedBins);
-    console.log('Calling onBinsChange with updated bins:', updatedBins);
     onBinsChange(updatedBins);
     setSavedInputs((prev) => ({ ...prev, [id]: "" }));
     
     // Update in database
     try {
-      console.log('Sending PATCH request to /api/bins with:', { id, currentAmount: newAmount });
       const res = await fetch("/api/bins", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id, currentAmount: newAmount }),
       });
-      
-      console.log('PATCH response status:', res.status);
       
       if (!res.ok) {
         const errorText = await res.text();
@@ -310,7 +329,6 @@ const SavingsBins = ({
     customMonth: number | null,
     customDay: number | null,
   ) => {
-    console.log('Submitting schedule:', { id, frequency, customMonth, customDay });
     
     if (!frequency) {
       toast({ title: "Select a frequency" });
@@ -323,7 +341,6 @@ const SavingsBins = ({
     
     try {
       const bin = bins.find((b) => b.id === id);
-      console.log('Found bin for schedule:', bin);
       
       if (!bin) {
         toast({ title: "Bin not found" });
@@ -339,15 +356,11 @@ const SavingsBins = ({
         monthlyAllocation: bin.monthlyAllocation ?? 0,
       };
       
-      console.log('Sending schedule data:', scheduleData);
-      
       const res = await fetch("/api/schedules", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(scheduleData),
       });
-      
-      console.log('Schedule response status:', res.status);
       
       if (!res.ok) {
         const errorText = await res.text();
@@ -356,7 +369,6 @@ const SavingsBins = ({
       }
       
       const responseData = await res.json();
-      console.log('Schedule save response:', responseData);
       
       const next = computeNextTransferDate(frequency, customMonth, customDay);
       updateBinScheduleLocal(id, frequency, customMonth, customDay);
@@ -725,44 +737,60 @@ const SavingsBins = ({
           })}
         </div>
 
-        {/* Add New Bin */}
-        <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
-          <h4 className="font-medium text-white mb-3 text-lg">
-            Add New Savings Bin
-          </h4>
-          <div className="flex items-end gap-3">
-            <div className="flex-1">
-              <Label htmlFor="new-bin-name" className="text-sm text-blue-100">
-                Bin Name
-              </Label>
-              <Input
-                id="new-bin-name"
-                placeholder="e.g., Car Fund, Wedding"
-                value={newBinName}
-                onChange={(e) => setNewBinName(e.target.value)}
-                className="bg-white/90 text-gray-900 placeholder-gray-600 border-white/30"
-              />
+        {/* Add New Bin or Upgrade Prompt */}
+        {canAddSavingsBin ? (
+          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
+            <h4 className="font-medium text-white mb-3 text-lg">
+              Add New Savings Bin
+            </h4>
+            <div className="flex items-end gap-3">
+              <div className="flex-1">
+                <Label htmlFor="new-bin-name" className="text-sm text-blue-100">
+                  Bin Name
+                </Label>
+                <Input
+                  id="new-bin-name"
+                  placeholder="e.g., Car Fund, Wedding"
+                  value={newBinName}
+                  onChange={(e) => setNewBinName(e.target.value)}
+                  className="bg-white/90 text-gray-900 placeholder-gray-600 border-white/30"
+                />
+              </div>
+              <div className="w-32">
+                <Label htmlFor="new-bin-goal" className="text-sm text-blue-100">
+                  Goal Amount
+                </Label>
+                <Input
+                  id="new-bin-goal"
+                  type="number"
+                  placeholder="5000"
+                  value={newBinGoal}
+                  onChange={(e) => setNewBinGoal(e.target.value)}
+                  className="bg-white/90 text-gray-900 placeholder-gray-600 border-white/30"
+                />
+              </div>
+              <Button onClick={addBin} className="flex-shrink-0 bg-white text-blue-600 hover:bg-blue-50 font-semibold">
+                <Plus className="h-4 w-4 mr-1" />
+                Add Bin
+              </Button>
             </div>
-            <div className="w-32">
-              <Label htmlFor="new-bin-goal" className="text-sm text-blue-100">
-                Goal Amount
-              </Label>
-              <Input
-                id="new-bin-goal"
-                type="number"
-                placeholder="5000"
-                value={newBinGoal}
-                onChange={(e) => setNewBinGoal(e.target.value)}
-                className="bg-white/90 text-gray-900 placeholder-gray-600 border-white/30"
-              />
-            </div>
-            <Button onClick={addBin} className="flex-shrink-0 bg-white text-blue-600 hover:bg-blue-50 font-semibold">
-              <Plus className="h-4 w-4 mr-1" />
-              Add Bin
-            </Button>
           </div>
-        </div>
+        ) : (
+          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
+            <UpgradePrompt 
+              feature="savingsBins"
+              currentCount={featureLimits?.usage.savingsBins}
+              limit={5}
+              onUpgrade={() => {
+                // TODO: Implement Stripe checkout
+                console.log('Upgrade to Pro clicked');
+              }}
+            />
+          </div>
+        )}
       </div>
+
+
     </div>
   );
 };

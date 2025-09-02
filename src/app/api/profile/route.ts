@@ -10,7 +10,7 @@ export async function GET() {
 		if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 		const { data, error } = await supabase
 			.from("profiles")
-			.select("monthly_income")
+			.select("monthly_income, subscription_status, stripe_subscription_id")
 			.eq("user_id", user.id)
 			.single();
 		if (error && error.code !== "PGRST116") throw error; // no rows
@@ -22,7 +22,9 @@ export async function GET() {
 		return NextResponse.json({ 
 			monthlyIncome: data?.monthly_income ?? null,
 			fullName: fullName,
-			firstName: firstName
+			firstName: firstName,
+			subscriptionStatus: data?.subscription_status ?? 'free',
+			stripeSubscriptionId: data?.stripe_subscription_id ?? null
 		});
 	} catch {
 		return NextResponse.json({ error: "Failed to fetch" }, { status: 500 });
